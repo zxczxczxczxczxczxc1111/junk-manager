@@ -106,6 +106,11 @@ public static class InstalledProgramReader
 
         var stroka = zapis.UninstallString ?? string.Empty;
 
+        if (string.Equals(zapis.WinGetInstallerType, "portable", StringComparison.OrdinalIgnoreCase))
+        { return InstallerKind.WinGetPortable; }
+        if (string.Equals(zapis.WinGetInstallerType, "nullsoft", StringComparison.OrdinalIgnoreCase))
+        { return InstallerKind.Nsis; }
+
         if (ImyaFayla(stroka).Equals("msiexec.exe", StringComparison.OrdinalIgnoreCase))
         {
             return InstallerKind.Msi;
@@ -127,11 +132,7 @@ public static class InstalledProgramReader
 
         var imya = ImyaFayla(stroka);
 
-        // Inno names its stub unins000.exe, digits and all, and the digits are
-        // what separates it from NSIS. Checking the bare "unins" prefix instead
-        // swallows Uninstall.exe and uninst.exe, which are NSIS conventions, and
-        // makes the NSIS branch below unreachable: caught by the table test on
-        // 05.09.2026, where Uninstall.exe came back as InnoSetup.
+        // Inno's numbered stub is recognizable; a generic uninstall.exe proves nothing.
         if (imya.StartsWith("unins", StringComparison.OrdinalIgnoreCase)
             && imya.Length > 5
             && char.IsAsciiDigit(imya[5]))
@@ -139,16 +140,7 @@ public static class InstalledProgramReader
             return InstallerKind.InnoSetup;
         }
 
-        // NSIS leaves no registry marker at all, so this last one IS a guess and
-        // is written down as such. The cost of guessing wrong is bounded: /S on
-        // something that is not NSIS produces a visible window, and the runner
-        // refuses to leave a visible window unattended.
-        if (imya.StartsWith("uninstall", StringComparison.OrdinalIgnoreCase)
-            || imya.StartsWith("uninst", StringComparison.OrdinalIgnoreCase))
-        {
-            return InstallerKind.Nsis;
-        }
-
+        // Anyone can name an executable uninstall.exe; the filename is not a diploma.
         return InstallerKind.Unknown;
     }
 
@@ -387,6 +379,7 @@ public static class InstalledProgramReader
                         InnoAppPath: Stroka(zapis, "Inno Setup: App Path"))
                     {
                         DisplayIcon = Stroka(zapis, "DisplayIcon"),
+                        WinGetInstallerType = Stroka(zapis, "WinGetInstallerType"),
                         EstimatedSizeBytes = Chislo(zapis, "EstimatedSize") > 0 ? (long)Chislo(zapis, "EstimatedSize") * 1024 : null,
                     });
                     }

@@ -28,13 +28,15 @@ internal sealed partial class ProgramRowViewModel : ObservableObject
             RemovalDescription = "Удаление пакета текущего пользователя";
         }
         else if (UninstallCommandBuilder.TryBuild(source, out var command, out var reason))
-            RemovalDescription = command.Quiet ? "Штатный деинсталлятор, без мастера" : "Откроется мастер удаления программы";
+            RemovalDescription = command.WinGet is not null ? "Удаление через WinGet, без интернет-каталогов" :
+                command.Quiet ? "Штатный деинсталлятор, без мастера" : "Откроется мастер удаления программы";
         else Refusal = reason ?? "Не удалось определить команду удаления";
     }
 
     public InstalledProgram Source { get; }
     public string Name => Source.DisplayName;
-    public string Details => string.Join(" · ", new[] { Source.Publisher, Source.Version, Source.Installer.ToString() }
+    public string Details => string.Join(" · ", new[] { Source.Publisher, Source.Version,
+        Source.Installer == InstallerKind.WinGetPortable ? "WinGet" : Source.Installer.ToString() }
         .Where(value => !string.IsNullOrWhiteSpace(value)));
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(Size))] private long? _sizeBytes;
     [ObservableProperty] [NotifyPropertyChangedFor(nameof(Size))] private bool _sizePending;

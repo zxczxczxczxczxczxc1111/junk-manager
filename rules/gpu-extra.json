@@ -1,0 +1,7 @@
+{
+  "category":"Видеокарта",
+  "rules":[
+    {"id":"directx-extra-cache","name":"Дополнительный кэш DirectX","paths":["%LOCALAPPDATA%\\D3DSCache"],"tier":"Safe","consequence":"Шейдеры соберутся заново при запуске игр."},
+    {"id":"driver-downloads","name":"Загруженные установщики видеодрайверов","paths":["%PROGRAMDATA%\\NVIDIA Corporation\\NVIDIA App\\UpdateFramework\\ota-artifacts","%SYSTEMDRIVE%\\NVIDIA","%SYSTEMDRIVE%\\AMD"],"tier":"Risk","consequence":"Старые распакованные установщики удалятся. Для повторной установки драйвера понадобится скачать пакет заново. Проверь содержимое перед выбором.","olderThanDays":7}
+  ]
+}

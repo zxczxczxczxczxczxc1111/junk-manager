@@ -1,0 +1,12 @@
+{
+  "category":"Приложения",
+  "rules":[
+    {"id":"claude-cache","name":"Кэш Claude Desktop","paths":["%APPDATA%\\Claude\\Cache","%APPDATA%\\Claude\\Code Cache","%APPDATA%\\Claude\\GPUCache","%APPDATA%\\Claude\\DawnGraphiteCache","%APPDATA%\\Claude\\DawnWebGPUCache","%APPDATA%\\Claude\\logs"],"tier":"Safe","consequence":"Кэш пересоздастся. Журналы прошлых ошибок пропадут; чаты, вход и настройки сохранятся.","processNames":["Claude"]},
+    {"id":"claude-cli-temp","name":"Временные файлы Claude Code","paths":["%USERPROFILE%\\.claude\\shell-snapshots","%USERPROFILE%\\.claude\\statsig","%USERPROFILE%\\.claude\\logs"],"tier":"Risk","consequence":"Снимки оболочки и диагностические журналы пропадут. Закрой сеансы Claude Code. История в projects, плагины и настройки сохранятся.","processNames":["claude"],"olderThanDays":7},
+    {"id":"squirrel-temp","name":"Временные файлы обновлений приложений","paths":["%LOCALAPPDATA%\\SquirrelTemp","%LOCALAPPDATA%\\*\\SquirrelTemp"],"tier":"Safe","consequence":"Старые временные файлы обновлений удалятся. Файлы за последнюю неделю сохранятся.","olderThanDays":7},
+    {"id":"adobe-extra-cache","name":"Дополнительный медиакэш Adobe","paths":["%APPDATA%\\Adobe\\Common\\Media Cache"],"tier":"Risk","consequence":"Индексы медиа придётся создать заново. Исходники и проекты сохранятся.","processNames":["Adobe Premiere Pro","AfterFX","Adobe Media Encoder"]},
+    {"id":"apple-cache","name":"Кэш iTunes и журналы Apple","paths":["%LOCALAPPDATA%\\Apple Computer\\iTunes\\Cache","%LOCALAPPDATA%\\Apple Computer\\Logs"],"tier":"Safe","consequence":"Кэш загрузится заново. Старые журналы пропадут; музыка и резервные копии устройств сохранятся.","processNames":["iTunes"]},
+    {"id":"calls-logs","name":"Журналы Zoom и Skype","paths":["%APPDATA%\\Zoom\\logs","%APPDATA%\\Skype\\logs"],"tier":"Safe","consequence":"Журналы прошлых ошибок пропадут. Переписка и записи звонков сохранятся.","processNames":["Zoom","Skype"],"olderThanDays":7},
+    {"id":"unreal-derived-cache","name":"Кэш Unreal Engine","paths":["%LOCALAPPDATA%\\UnrealEngine\\Common\\DerivedDataCache"],"tier":"Safe","consequence":"Кэш ресурсов соберётся заново. Первое открытие проекта будет дольше, исходники сохранятся.","processNames":["UnrealEditor","UE4Editor"]}
+  ]
+}

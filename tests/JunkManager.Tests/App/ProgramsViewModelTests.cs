@@ -211,6 +211,21 @@ public sealed class ProgramsViewModelTests
     private static InstalledProgram Program(string name) => new(name, name, "Fixture", "1", null, null, null,
         InstallerKind.Msix, ProgramScope.Msix, null) { PackageFullName = name + "_1.0.0.0_x64__fixture" };
 
+    [Theory]
+    [InlineData("Oven-sh.Bun_Microsoft.Winget.Source_8wekyb3d8bbwe")]
+    [InlineData("BrechtSanders.WinLibs.POSIX.UCRT_Microsoft.Winget.Source_8wekyb3d8bbwe")]
+    public void WinGet_portable_row_can_be_selected_without_elevation(string code)
+    {
+        // A visible checkbox should do more than decorate a refusal.
+        var program = new InstalledProgram("User:" + code, "Portable fixture", "Fixture", "1", @"C:\fixture",
+            "winget uninstall --product-code " + code, null, InstallerKind.WinGetPortable, ProgramScope.User, null)
+            { Registrations = [new(ProgramScope.User, code)] };
+        var row = new ProgramRowViewModel(program, false);
+        row.IsSelected = true;
+        row.IsSelected.Should().BeTrue();
+        row.Refusal.Should().BeNullOrEmpty();
+    }
+
     private sealed class FakePrograms : IProgramsService
     {
         public string CleanupNote => "Permanent files; registry export disabled";

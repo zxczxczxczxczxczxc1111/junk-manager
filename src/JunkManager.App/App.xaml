@@ -40,6 +40,9 @@
       <DataTemplate DataType="{x:Type vm:FilesViewModel}">
         <v:FilesView/>
       </DataTemplate>
+      <DataTemplate DataType="{x:Type vm:StorageViewModel}">
+        <v:StorageView/>
+      </DataTemplate>
 
       <DataTemplate DataType="{x:Type vm:HistoryViewModel}">
         <v:HistoryView/>

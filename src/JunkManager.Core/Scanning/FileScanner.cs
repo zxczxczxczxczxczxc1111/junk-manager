@@ -43,11 +43,6 @@ public sealed class FileScanner(TimeProvider? time = null,
                 foreach (var path in expanded)
                 {
                     if (ct.IsCancellationRequested) break;
-                    if (processReason is not null)
-                    {
-                        skipped.Add(new SkippedItem(path, processReason));
-                        continue;
-                    }
                     if (!CleanupPathPolicy.TryVerify(path, out var root, out var reason))
                     {
                         skipped.Add(new SkippedItem(path, reason!));
@@ -102,7 +97,9 @@ public sealed class FileScanner(TimeProvider? time = null,
                         continue;
                     }
                     // Zero bytes is a size, not a witness protection programme for empty files.
-                    findings.Add(new Finding(rule.Name, root.Value, bytes, rule.Tier, rule.Consequence,
+                    // Reading sizes is allowed while an app runs; deletion still checks its process guard.
+                    var consequence = processReason is null ? rule.Consequence : rule.Consequence + " Перед очисткой: " + processReason;
+                    findings.Add(new Finding(rule.Name, root.Value, bytes, rule.Tier, consequence,
                         FindingSource.Rule, rule.Id, newest is null ? null : Days(newest.Value, nowUtc),
                         Directory.Exists(root.Value) ? DeleteScope.SelectedEntries : DeleteScope.Whole, targets)
                     {

@@ -68,14 +68,38 @@
       "paths": [
         "%LOCALAPPDATA%\\Spotify\\Browser\\Cache",
         "%LOCALAPPDATA%\\Spotify\\Browser\\Code Cache",
-        "%LOCALAPPDATA%\\Spotify\\Browser\\GPUCache"
+        "%LOCALAPPDATA%\\Spotify\\Browser\\GPUCache",
+        "%LOCALAPPDATA%\\Packages\\SpotifyAB.SpotifyMusic_zpdnekdrzrea0\\LocalCache\\Spotify\\Browser\\Cache",
+        "%LOCALAPPDATA%\\Packages\\SpotifyAB.SpotifyMusic_zpdnekdrzrea0\\LocalCache\\Spotify\\Browser\\Code Cache",
+        "%LOCALAPPDATA%\\Packages\\SpotifyAB.SpotifyMusic_zpdnekdrzrea0\\LocalCache\\Spotify\\Browser\\GPUCache"
       ],
       "tier": "Safe",
-      "consequence": "Закройте Spotify. Веб-интерфейс загрузит кэш заново. Папки Data, Storage и скачанная музыка не выбираются.",
+      "consequence": "Закройте Spotify. Веб-интерфейс загрузит кэш заново. Вход и настройки сохранятся.",
       "olderThanDays": 0,
       "processNames": [
         "Spotify"
       ]
+    },
+    {
+      "id": "spotify-audio-cache",
+      "name": "Кэш прослушивания Spotify",
+      "paths": ["%LOCALAPPDATA%\\Spotify\\Data", "%LOCALAPPDATA%\\Spotify\\Storage", "%LOCALAPPDATA%\\Packages\\SpotifyAB.SpotifyMusic_zpdnekdrzrea0\\LocalCache\\Spotify\\Data"],
+      "tier": "Safe",
+      "consequence": "Закройте Spotify. Кэш прослушивания и сохранённая музыка будут удалены. Для повторного прослушивания потребуется интернет и загрузка треков заново. Вход, настройки и плейлисты в аккаунте сохранятся.",
+      "olderThanDays": 0,
+      "processNames": ["Spotify"]
+    },
+    {
+      "id": "telegram-media-cache",
+      "name": "Кэш медиа Telegram",
+      "paths": [
+        "%APPDATA%\\Telegram Desktop\\tdata\\user_data*\\cache",
+        "%APPDATA%\\Telegram Desktop\\tdata\\user_data*\\media_cache"
+      ],
+      "tier": "Risk",
+      "consequence": "Закройте Telegram. Фото и видео из кэша придётся загрузить заново. Если сообщение уже удалено или файл больше недоступен, восстановить эту копию не получится. Данные входа и папка загрузок сохраняются.",
+      "olderThanDays": 0,
+      "processNames": ["Telegram"]
     },
     {
       "id": "office-inetcache",

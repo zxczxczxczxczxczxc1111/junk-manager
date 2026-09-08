@@ -1,0 +1,22 @@
+<Project>
+  <!-- COM searches beside the process, not inside our bundle. Give the worker a real doorstep. -->
+  <Target Name="BundleWinGetWorkerHost" BeforeTargets="_ComputeFilesToBundle"
+          Condition="'$(PublishSingleFile)' == 'true' and ('$(MSBuildProjectName)' == 'JunkManager.App' or '$(MSBuildProjectName)' == 'JunkManager.Cli')">
+    <Copy SourceFiles="$(AppHostIntermediatePath)" DestinationFiles="$(IntermediateOutputPath)JunkManager.WinGetHost.exe" />
+    <ItemGroup>
+      <!-- The bundle host absorbs these DLLs, but the extracted worker still needs its own lungs. -->
+      <ResolvedFileToPublish Include="@(RuntimePackAsset)" Condition="'%(RuntimePackAsset.AssetType)' == 'native'">
+        <RelativePath>WinGetRuntime/%(Filename)%(Extension)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+      <ResolvedFileToPublish Include="$(TargetDir)$(AssemblyName).deps.json">
+        <RelativePath>WinGetRuntime/$(AssemblyName).deps.json</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+      <ResolvedFileToPublish Include="$(IntermediateOutputPath)JunkManager.WinGetHost.exe">
+        <RelativePath>JunkManager.WinGetHost.exe</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
+</Project>

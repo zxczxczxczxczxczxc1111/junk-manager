@@ -84,8 +84,8 @@ internal sealed class UninstallProcess : IDisposable
 
             var code = _root.ExitCode;
             _pipes.CancelAfter(TimeSpan.FromSeconds(2));
-            await _stdout.ConfigureAwait(false);
-            return new(code, string.Join("; ", new[] { await _stderr.ConfigureAwait(false), _trackingError, _inputError }
+            var output = await _stdout.ConfigureAwait(false);
+            return new(code, string.Join("; ", new[] { await _stderr.ConfigureAwait(false), code != 0 ? output : null, _trackingError, _inputError }
                 .Where(s => !string.IsNullOrWhiteSpace(s))), _trackingError is null);
         }
         finally

@@ -115,6 +115,28 @@ public sealed class UninstallCommandBuilderTests
     }
 
     [Fact]
+    public void Lowercase_nsis_switch_does_not_replace_the_silent_switch()
+    {
+        // NSIS reads the alphabet literally, unlike our former optimism.
+        var program = Programma(InstallerKind.Nsis, @"C:\Prog\Uninstall.exe /s");
+        UninstallCommandBuilder.TryBuild(program, Est, out var command, out _).Should().BeTrue();
+        command.Arguments.Should().Contain("/S");
+    }
+
+    [Theory]
+    [InlineData(@"C:\net-takogo\gone.exe /S")]
+    [InlineData(@"C:\Windows\System32\cmd.exe /c uninstall")]
+    [InlineData("\"unterminated")]
+    public void Invalid_quiet_command_falls_back_to_the_registered_wizard(string quiet)
+    {
+        // A stale silent command must not hold the real wizard hostage.
+        var program = Programma(InstallerKind.Nsis, @"C:\Prog\Uninstall.exe /remove", quiet);
+        UninstallCommandBuilder.TryBuild(program, Est, out var command, out _).Should().BeTrue();
+        command.Arguments.Should().Equal("/remove");
+        command.Quiet.Should().BeFalse();
+    }
+
+    [Fact]
     public void TryBuild_InnoSetup_beret_oba_klyucha()
     {
         var p = Programma(InstallerKind.InnoSetup, @"C:\Prog\unins000.exe");

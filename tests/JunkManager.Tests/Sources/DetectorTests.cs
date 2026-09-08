@@ -94,6 +94,23 @@ public sealed class DetectorTests : IClassFixture<SandboxFixture>
     }
 
     [Fact]
+    public async Task Unknown_cache_owner_requires_review_and_keeps_account_data()
+    {
+        // A folder named Cache is evidence for inspection, not a psychic reading of its owner.
+        var root = _sandbox.CreateDirectory("unknown-cache-owner");
+        Napolnit(Path.Combine(root, "UnlistedApp", "Cache"), 2, 19);
+        Napolnit(Path.Combine(root, "UnlistedApp", "Local Storage"), 1, 47);
+        Napolnit(Path.Combine(root, "UnlistedApp", "Service Worker", "CacheStorage"), 1, 53);
+        var result = await new ElectronCacheDetector().ScanAsync([root], CancellationToken.None);
+        var finding = result.Findings.Should().ContainSingle().Subject;
+        finding.SizeBytes.Should().Be(38);
+        finding.Tier.Should().Be(RiskTier.Risk);
+        finding.RequiredStoppedProcesses.Should().Contain("UnlistedApp");
+        File.Exists(Path.Combine(root, "UnlistedApp", "Local Storage", "f0.bin")).Should().BeTrue();
+        File.Exists(Path.Combine(root, "UnlistedApp", "Service Worker", "CacheStorage", "f0.bin")).Should().BeTrue();
+    }
+
+    [Fact]
     public async Task ElectronCacheDetector_imya_nazyvaet_prilozhenie_a_ne_papku_kesha()
     {
         var root = _sandbox.CreateDirectory("electron-imya");

@@ -139,7 +139,7 @@ public sealed class InstalledProgramReaderTests
     [Theory]
     [InlineData(@"MsiExec.exe /I{11111111-1111-1111-1111-111111111111}", null, null, InstallerKind.Msi)]
     [InlineData(@"C:\Prog\unins000.exe", null, @"C:\Prog", InstallerKind.InnoSetup)]
-    [InlineData(@"C:\Prog\Uninstall.exe", null, null, InstallerKind.Nsis)]
+    [InlineData(@"C:\Prog\Uninstall.exe", null, null, InstallerKind.Unknown)]
     [InlineData(@"C:\Users\x\AppData\Local\Discord\Update.exe --uninstall", null, null, InstallerKind.Squirrel)]
     [InlineData(@"C:\Prog\setup.exe /remove", null, null, InstallerKind.Unknown)]
     public void Opredelit_uznaet_vid_ustanovshchika(
@@ -158,6 +158,15 @@ public sealed class InstalledProgramReaderTests
             uninstall: @"C:\Prog\Uninstall.exe", windowsInstaller: "1");
 
         InstalledProgramReader.Opredelit(zapis).Should().Be(InstallerKind.Msi);
+    }
+
+    [Theory]
+    [InlineData("portable", InstallerKind.WinGetPortable)]
+    [InlineData("nullsoft", InstallerKind.Nsis)]
+    public void WinGet_metadata_identifies_the_installer_without_filename_guessing(string type, InstallerKind expected)
+    {
+        var entry = Zapis("Test.Package", ProgramScope.User) with { WinGetInstallerType = type };
+        InstalledProgramReader.Opredelit(entry).Should().Be(expected);
     }
 
     [Theory]

@@ -24,7 +24,7 @@ public sealed class ShellNavigationTests(UiFixture stend, ITestOutputHelper vyvo
 
 
     private static readonly string[] Razdely =
-        ["overview", "files", "apps", "registry", "history", "settings"];
+        ["overview", "files", "storage", "apps", "registry", "history", "settings"];
 
     /// <param name="marker">
     /// Идентификатор, по которому видно, что раздел ПОКАЗАЛ своё содержимое.
@@ -34,6 +34,7 @@ public sealed class ShellNavigationTests(UiFixture stend, ITestOutputHelper vyvo
     [Theory]
     [InlineData("overview", "disk-strip")]
     [InlineData("files", "files-list")]
+    [InlineData("storage", "storage-heading")]
     [InlineData("apps", "apps-list")]
     // Не empty-title: модуль реестра приехал этапом 5, и раздел показывает
     // настоящий экран с заголовком «Найдено записей».
@@ -66,7 +67,23 @@ public sealed class ShellNavigationTests(UiFixture stend, ITestOutputHelper vyvo
     }
 
     [Fact]
-    public void V_bokovoy_paneli_rovno_shest_razdelov()
+    public void Storage_analysis_runs_in_the_real_window_and_filters_the_report()
+    {
+        // A header-only victory is how empty screens get promoted to features.
+        stend.Perejti("storage");
+        UiFixture.Podozhdat(() => stend.Est("storage-analyze"), TimeSpan.FromSeconds(10)).Should().BeTrue();
+        stend.Nazhat("storage-analyze");
+        UiFixture.Podozhdat(() => stend.Est("storage-status") && stend.Imya("storage-status").StartsWith("Показано объектов:", StringComparison.Ordinal),
+            TimeSpan.FromMinutes(4)).Should().BeTrue("анализ в госте должен показать настоящий отчёт");
+        stend.Skolko("storage-open").Should().BeGreaterThan(0);
+        using (var screenshot = stend.Snimok()) UiPalette.Sohranit(screenshot, "storage-report");
+        stend.Vvesti("storage-search", "impossible-storage-path-" + Guid.NewGuid().ToString("N"));
+        try { UiFixture.Podozhdat(() => stend.Skolko("storage-open") == 0, TimeSpan.FromSeconds(10)).Should().BeTrue(); }
+        finally { stend.Vvesti("storage-search", string.Empty); }
+    }
+
+    [Fact]
+    public void V_bokovoy_paneli_est_vse_razdely_bez_otdelnogo_ekrana_udaleniya()
     {
         // Седьмой раздел «Подтверждение и очистка» пытались завести дважды.
         // Он делит один поток надвое и оставляет человека не там, где он

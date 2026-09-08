@@ -52,6 +52,9 @@ internal static class ForbiddenRoots
         Add(list, Folder(Environment.SpecialFolder.CommonStartMenu));
         Add(list, Folder(Environment.SpecialFolder.StartMenu));
 
+        // Single-file apps extract their runtime here. Cleaning one's own organs is not maintenance.
+        Add(list, AppContext.BaseDirectory);
+
         // "C:\Users" has no SpecialFolder of its own: it is the parent of the
         // current profile. Deriving it beats a literal, which would be wrong on
         // any machine where profiles were relocated.
@@ -97,6 +100,25 @@ internal static class ForbiddenRoots
         Add(list, Folder(Environment.SpecialFolder.LocalApplicationData));
         Add(list, Folder(Environment.SpecialFolder.ApplicationData));
         Add(list, Path.GetTempPath());
+
+        // Disposable stores are named narrowly; the profile root never gets a master key.
+        var profile = Folder(Environment.SpecialFolder.UserProfile);
+        if (profile.Length > 0)
+        {
+            foreach (var relative in new[]
+            {
+                @".npm\_cacache", @".nuget\packages", @".cargo\registry\cache", @".cargo\registry\src",
+                @"go\pkg\mod", @".gradle\caches", @".m2\repository", @".conda\pkgs",
+                @"miniconda3\pkgs", @"anaconda3\pkgs", @".cache\huggingface\hub",
+                @".claude\shell-snapshots", @".claude\statsig", @".claude\logs",
+            }) Add(list, Path.Combine(profile, relative));
+        }
+        var programs = Folder(Environment.SpecialFolder.ProgramFilesX86);
+        if (programs.Length > 0)
+        {
+            foreach (var relative in new[] { @"Steam\depotcache", @"Steam\appcache\httpcache", @"Steam\steamapps\shadercache" })
+                Add(list, Path.Combine(programs, relative));
+        }
 
         return list;
     }

@@ -17,6 +17,36 @@ public sealed class ProgramUninstallExecutionTests
     public ProgramUninstallExecutionTests() => VmFuse.RequireArmed();
 
     [Fact]
+    public async Task WinGet_request_for_another_registration_is_refused_before_launch()
+    {
+        // A caller cannot swap the parcel after the UI approved its address.
+        var program = Program("jm-test-package") with
+        {
+            Installer = InstallerKind.WinGetPortable,
+            UninstallString = "winget uninstall --product-code jm-test-package",
+            Registrations = [new(ProgramScope.User, "jm-test-package")],
+        };
+        var command = new UninstallCommand("WinGet", [], true)
+            { WinGet = new("another-package", ProgramScope.User) };
+        var result = await new UninstallRunner(new SpisokZhurnala(), new Inventory(ProgramPresence.Present)).RunAsync(
+            program, command, TimeSpan.FromSeconds(20), false, TestContext.Current.CancellationToken);
+        result.Outcome.Should().Be(UninstallOutcome.Refused);
+        result.ProcessId.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Failure_explanation_from_standard_output_reaches_the_result()
+    {
+        // Some uninstallers report disasters to stdout. The pipe is not a shredder.
+        var command = Command("[Console]::Out.WriteLine('fixture catalog unavailable'); exit 42");
+        var result = await new UninstallRunner(new SpisokZhurnala(), new Inventory(ProgramPresence.Present)).RunAsync(
+            Program("jm-test-" + Guid.NewGuid().ToString("N")), command, TimeSpan.FromSeconds(20), false,
+            TestContext.Current.CancellationToken);
+        result.Outcome.Should().Be(UninstallOutcome.Failed);
+        result.Reason.Should().Contain("fixture catalog unavailable");
+    }
+
+    [Fact]
     public async Task Incomplete_process_tree_cannot_become_removed_even_with_absent_registration()
     {
         var program = Program("jm-test-" + Guid.NewGuid().ToString("N"));

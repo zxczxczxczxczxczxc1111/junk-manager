@@ -1,0 +1,7 @@
+{
+  "category":"Игры",
+  "rules":[
+    {"id":"steam-depot-cache","name":"Кэш загрузок Steam","paths":["%ProgramFiles(x86)%\\Steam\\depotcache","%ProgramFiles(x86)%\\Steam\\appcache\\httpcache"],"tier":"Safe","consequence":"Кэш загрузится заново. Установленные игры и сохранения сохранятся.","processNames":["steam","steamwebhelper"]},
+    {"id":"steam-shaders","name":"Кэш шейдеров Steam","paths":["%ProgramFiles(x86)%\\Steam\\steamapps\\shadercache"],"tier":"Safe","consequence":"Шейдеры соберутся или загрузятся заново. При первых запусках возможны задержки.","processNames":["steam","steamwebhelper"]}
+  ]
+}

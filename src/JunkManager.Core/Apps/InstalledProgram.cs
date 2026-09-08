@@ -32,6 +32,8 @@ public enum InstallerKind
 
     /// <summary>Nothing recognised it. A quiet removal is not offered for these.</summary>
     Unknown = 6,
+    /// <summary>Portable files owned by Windows Package Manager.</summary>
+    WinGetPortable = 7,
 }
 
 /// <summary>
@@ -75,6 +77,7 @@ public sealed record RawUninstallEntry(
     string? InnoAppPath)
 {
     public string? DisplayIcon { get; init; }
+    public string? WinGetInstallerType { get; init; }
     public long? EstimatedSizeBytes { get; init; }
 }
 

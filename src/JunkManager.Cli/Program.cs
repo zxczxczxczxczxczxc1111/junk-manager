@@ -15,6 +15,9 @@ using Microsoft.Win32;
 // somebody is reading it to find out what broke.
 Console.OutputEncoding = System.Text.Encoding.UTF8;
 
+// This worker must be recognized before the elevation bootstrap gets theatrical.
+if (WinGetUserWorker.IsRequested(args)) return await WinGetUserWorker.RunAsync(args);
+
 // Loose catalogs no longer steer a cleaner with deletion privileges. What a concept.
 if (args.Any(arg => string.Equals(arg, "--rules", StringComparison.Ordinal)
     || arg.StartsWith("--rules=", StringComparison.Ordinal)))

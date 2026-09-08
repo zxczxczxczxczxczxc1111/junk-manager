@@ -15,19 +15,18 @@ public sealed class ShellViewModelTests
     private static ShellViewModel Obolochka() => new(isElevated: true);
 
     [Fact]
-    public void Razdelov_rovno_shest_i_v_poryadke_iz_speki()
+    public void Navigation_includes_storage_analysis_without_splitting_the_cleanup_flow()
     {
-        // Спека раздел 15: шесть, а не семь. Отдельного «Подтверждение и
-        // очистка» нет, это шаги внутри «Файлов».
+        // Analysis gets a screen; confirmation still refuses to become a tourist destination.
         Obolochka().Sections.Select(s => s.Id).Should().Equal(
-            "overview", "files", "apps", "registry", "history", "settings");
+            "overview", "files", "storage", "apps", "registry", "history", "settings");
     }
 
     [Fact]
     public void U_kazhdogo_razdela_svoy_identifikator_avtomatizacii()
     {
         Obolochka().Sections.Select(s => s.AutomationId).Should().Equal(
-            "rail-overview", "rail-files", "rail-apps", "rail-registry",
+            "rail-overview", "rail-files", "rail-storage", "rail-apps", "rail-registry",
             "rail-history", "rail-settings");
     }
 
@@ -62,7 +61,7 @@ public sealed class ShellViewModelTests
         var obolochka = Obolochka();
         var byl = obolochka.Current;
 
-        obolochka.VybratCommand.Execute(obolochka.Sections[3]);
+        obolochka.VybratCommand.Execute(obolochka.Sections.Single(section => section.Id == "registry"));
 
         obolochka.Current.Id.Should().Be("registry");
         byl.IsCurrent.Should().BeFalse();

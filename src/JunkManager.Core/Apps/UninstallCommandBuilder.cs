@@ -13,6 +13,7 @@ public sealed record UninstallCommand(
     string Executable, IReadOnlyList<string> Arguments, bool Quiet)
 {
     public string? StandardInput { get; init; }
+    public WinGetUninstallRequest? WinGet { get; init; }
 }
 
 [SuppressMessage(
@@ -122,6 +123,13 @@ public static partial class UninstallCommandBuilder
 
         command = new UninstallCommand(string.Empty, [], Quiet: false);
 
+        if (program.Installer == InstallerKind.WinGetPortable)
+        {
+            if (!WinGetUninstallRequest.TryCreate(program, out var request, out reason)) { return false; }
+            command = new UninstallCommand("WinGet", [], Quiet: true) { WinGet = request };
+            return true;
+        }
+
         if (program.Installer == InstallerKind.Msix)
         {
             reason = "пакеты MSIX удаляются своим механизмом, а не строкой из реестра";
@@ -154,6 +162,7 @@ public static partial class UninstallCommandBuilder
         // A quiet string, when the installer wrote one, is the installer's own
         // answer to "how do I remove this without asking". 31 programs on this
         // machine have one. It beats anything assembled here.
+        var quietFailed = false;
         if (!string.IsNullOrWhiteSpace(program.QuietUninstallString))
         {
             if (TryRazobrat(program.QuietUninstallString, sushchestvuet,
@@ -164,8 +173,12 @@ public static partial class UninstallCommandBuilder
                 return true;
             }
 
-            reason = tihayaPrichina;
-            return false;
+            if (string.IsNullOrWhiteSpace(program.UninstallString))
+            {
+                reason = tihayaPrichina;
+                return false;
+            }
+            quietFailed = true;
         }
 
         if (string.IsNullOrWhiteSpace(program.UninstallString))
@@ -181,12 +194,14 @@ public static partial class UninstallCommandBuilder
             return false;
         }
 
-        var klyuchi = TihieKlyuchi(program.Installer);
+        // A broken silent recipe earns the normal wizard, not another guessed recipe.
+        var klyuchi = quietFailed ? [] : TihieKlyuchi(program.Installer);
         var argumenty = new List<string>(sobstvennye);
 
         foreach (var klyuch in klyuchi)
         {
-            if (!argumenty.Contains(klyuch, StringComparer.OrdinalIgnoreCase))
+            if (!argumenty.Contains(klyuch, program.Installer == InstallerKind.Nsis
+                    ? StringComparer.Ordinal : StringComparer.OrdinalIgnoreCase))
             {
                 argumenty.Add(klyuch);
             }
@@ -318,8 +333,8 @@ public static partial class UninstallCommandBuilder
     /// directory, while CreateProcess later walks its own list: application
     /// directory, current directory, System32, PATH. For a relative name those
     /// are two different files, and which one runs is decided by whoever put an
-    /// exe in the right place. Every real uninstall string in the registry
-    /// carries an absolute path, so nothing legitimate is lost.
+    /// exe in the right place. Registered package managers need their own
+    /// identity-bound adapter; a bare name is not permission to search PATH.
     /// </remarks>
     private static bool PolnyyPut(ref string exe, ref IReadOnlyList<string> args, out string? reason)
     {

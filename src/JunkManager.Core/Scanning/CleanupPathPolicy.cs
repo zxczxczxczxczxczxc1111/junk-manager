@@ -20,12 +20,26 @@ public static class CleanupPathPolicy
         "Documents", "Downloads", "Desktop", "Pictures", "Videos", "Music", "Saved Games",
     };
 
-    public static bool IsProtected(string path)
+    public static bool IsProtected(string path) => IsProtected(path,
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData));
+
+    internal static bool IsProtected(string path, string localAppData)
     {
         ArgumentNullException.ThrowIfNull(path);
-        return path.Split(
-            [Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar], StringSplitOptions.RemoveEmptyEntries)
-            .Any(ProtectedNames.Contains);
+        var normalized = path.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+        var spotify = Path.Combine(localAppData, "Spotify", "Storage");
+        var spotifyStorage = !string.IsNullOrWhiteSpace(localAppData)
+            && (normalized.Equals(spotify, StringComparison.OrdinalIgnoreCase)
+                || normalized.StartsWith(spotify + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase));
+        var segments = normalized.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries);
+        var storageIndex = spotify.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries).Length - 1;
+        for (var index = 0; index < segments.Length; index++)
+        {
+            // Only Spotify's exact media store gets this exception. Other Storage folders keep their doors locked.
+            if (spotifyStorage && index == storageIndex && segments[index].Equals("Storage", StringComparison.OrdinalIgnoreCase)) continue;
+            if (ProtectedNames.Contains(segments[index])) return true;
+        }
+        return false;
     }
 
     /// <summary>Rechecks every existing component. This narrows races; it does not pin directory handles.</summary>

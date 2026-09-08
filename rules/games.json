@@ -7,7 +7,10 @@
       "paths": [
         "%LOCALAPPDATA%\\Steam\\htmlcache\\Cache",
         "%LOCALAPPDATA%\\Steam\\htmlcache\\Code Cache",
-        "%LOCALAPPDATA%\\Steam\\htmlcache\\GPUCache"
+        "%LOCALAPPDATA%\\Steam\\htmlcache\\GPUCache",
+        "%LOCALAPPDATA%\\Steam\\htmlcache\\Default\\Cache",
+        "%LOCALAPPDATA%\\Steam\\htmlcache\\Default\\Code Cache",
+        "%LOCALAPPDATA%\\Steam\\htmlcache\\Default\\GPUCache"
       ],
       "tier": "Safe",
       "consequence": "Магазин и страницы игр подгрузятся заново. Установленные игры и сохранения не трогаются.",

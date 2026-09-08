@@ -3,13 +3,14 @@ using JunkManager.Core.Scanning;
 
 namespace JunkManager.Core.Sources.Detect;
 
-/// <summary>Known Electron owners with cache layout checks. A familiar folder name is not ownership evidence.</summary>
+/// <summary>Cache layouts in AppData. Unknown owners are visible for manual review, never selected as safe.</summary>
 public sealed class ElectronCacheDetector
 {
     private readonly FileScanner _scanner = new();
     private static readonly string[][] Shapes =
     [
         ["Cache", "Cache_Data"], ["Code Cache"], ["GPUCache"],
+        ["DawnGraphiteCache"], ["DawnWebGPUCache"], ["logs"],
     ];
 
     private static readonly Dictionary<string, string[]> Owners = new(StringComparer.OrdinalIgnoreCase)
@@ -17,6 +18,7 @@ public sealed class ElectronCacheDetector
         ["discord"] = ["Discord"], ["discordptb"] = ["DiscordPTB"],
         ["discordcanary"] = ["DiscordCanary"], ["discorddevelopment"] = ["DiscordDevelopment"],
         ["Slack"] = ["slack"], ["Code"] = ["Code"], ["Code - Insiders"] = ["Code - Insiders"],
+        ["Cursor"] = ["Cursor"], ["Claude"] = ["Claude"], ["Spotify"] = ["Spotify"],
     };
 
     public async Task<ScanResult> ScanAsync(IReadOnlyList<string> roots, CancellationToken ct)
@@ -46,18 +48,18 @@ public sealed class ElectronCacheDetector
                     foreach (var shape in Shapes)
                     {
                         var candidate = Path.Combine([application, .. shape]);
+                        if (shape.Length == 2 && !Directory.Exists(candidate)) candidate = Path.Combine(application, "Cache");
                         if (!Directory.Exists(candidate)) continue;
                         var name = Path.GetFileName(application);
-                        if (!Owners.TryGetValue(name, out var processes))
-                        {
-                            skipped.Add(new SkippedItem(candidate,
-                                "похож на кэш Electron, но владелец и допустимость удаления не подтверждены"));
-                            continue;
-                        }
+                        var known = Owners.TryGetValue(name, out var processes);
+                        var logs = shape[0] == "logs";
+                        var tier = known && !name.StartsWith("discord", StringComparison.OrdinalIgnoreCase) ? RiskTier.Safe : RiskTier.Risk;
                         rules.Add(new RuleDefinition("electron-" + rules.Count.ToString(System.Globalization.CultureInfo.InvariantCulture),
-                            "Кэш " + name, [candidate], "Risk",
-                            "Известное приложение Electron. Закройте его перед очисткой. Кэш загрузится заново; локальные избранные GIF могут пропасть.")
-                        { Tier = RiskTier.Risk, ProcessNames = processes });
+                            (logs ? "Журналы " : "Кэш ") + name, [candidate], tier.ToString(),
+                            known ? "Закройте приложение перед очисткой. Кэш загрузится заново; локальные избранные GIF и старые журналы могут пропасть."
+                                : "Папка похожа на кэш или журналы приложения. Проверь содержимое и закрой приложение перед удалением. Автоматически не выбирается.",
+                            OlderThanDays: logs ? 7 : 0)
+                        { Tier = tier, ProcessNames = processes ?? [name] });
                     }
                 }
             }

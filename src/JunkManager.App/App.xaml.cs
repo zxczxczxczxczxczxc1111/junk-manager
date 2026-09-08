@@ -37,6 +37,13 @@ internal partial class App : Application
         ArgumentNullException.ThrowIfNull(e);
         base.OnStartup(e);
 
+        // A user-token worker has one job and no window, settings, or elevation encore.
+        if (JunkManager.Deletion.WinGetUserWorker.IsRequested(e.Args))
+        {
+            Shutdown(JunkManager.Deletion.WinGetUserWorker.RunAsync(e.Args).GetAwaiter().GetResult());
+            return;
+        }
+
         // Настройки читаются ПЕРВЫМИ и синхронно: «Запускать с правами
         // администратора» решает, будет ли перезапуск, а перезапуск обязан
         // случиться до окна. Ждать тут нечего, кроме одного маленького файла.
@@ -89,6 +96,7 @@ internal partial class App : Application
         // Итог прохода один на все экраны. Обзор кладёт, «Файлы» читают.
         var proshloe = new PosledniyProhod();
         var obzor = skaner is null ? null : new OverviewViewModel(skaner, proshloe);
+        var storage = new StorageViewModel();
 
         // Служба очистки настоящая и заводится здесь, а не внутри модели:
         // модель, которая сама себе создаёт то, что трогает диск, не
@@ -138,7 +146,8 @@ internal partial class App : Application
                 zhurnal: zhurnal,
                 reestr: reestr,
                 nastroyki: nastroykiEkran,
-                programmy: programmy),
+                programmy: programmy,
+                storage: storage),
         };
 
         // Начальное состояние ставится ДО показа окна: иначе первый кадр
@@ -161,6 +170,7 @@ internal partial class App : Application
         okno.Closed += (_, _) =>
         {
             obzor?.Dispose();
+            storage.Dispose();
 
             // Закрытое окно обязано остановить идущую очистку. Иначе
             // удаление продолжается в процессе, у которого больше нет ни

@@ -11,6 +11,39 @@ namespace JunkManager.Tests.Safety;
 [Trait("Class", "Sandbox")]
 public sealed class SafetyGuardTests
 {
+    [Theory]
+    [InlineData(@".nuget\packages")]
+    [InlineData(@".cargo\registry\cache")]
+    [InlineData(@".gradle\caches")]
+    [InlineData(@".claude\logs")]
+    [InlineData(@".cache\huggingface\hub")]
+    public void Profile_cache_exceptions_do_not_unlock_siblings_or_parents(string relative)
+    {
+        // A cache permit is not a skeleton key for the user's entire house.
+        var root = Profile(relative);
+        SafetyGuard.TryVerify(Path.Combine(root, "entry.bin"), out _, out _).Should().BeTrue();
+        SafetyGuard.TryVerify(root + "-private", out _, out _).Should().BeFalse();
+        SafetyGuard.TryVerify(Path.Combine(root, "..", "settings.json"), out _, out _).Should().BeFalse();
+        SafetyGuard.TryVerify(Path.GetDirectoryName(root)!, out _, out _).Should().BeFalse();
+    }
+
+    [Fact]
+    public void Steam_cache_exceptions_keep_games_and_executables_protected()
+    {
+        var root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Steam");
+        SafetyGuard.TryVerify(Path.Combine(root, "steamapps", "shadercache", "123", "shader.bin"), out _, out _).Should().BeTrue();
+        SafetyGuard.TryVerify(Path.Combine(root, "steamapps", "common", "Game", "game.exe"), out _, out _).Should().BeFalse();
+        SafetyGuard.TryVerify(Path.Combine(root, "steam.exe"), out _, out _).Should().BeFalse();
+    }
+
+    [Fact]
+    public void Running_application_files_are_not_cleanup_targets()
+    {
+        // Unlocked metadata is still part of the living application.
+        SafetyGuard.TryVerify(Path.Combine(AppContext.BaseDirectory, "Microsoft.Management.Deployment.winmd"), out _, out _)
+            .Should().BeFalse();
+    }
+
     private static string Win(string tail) =>
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), tail);
 

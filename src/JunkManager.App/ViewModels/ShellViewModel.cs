@@ -81,11 +81,7 @@ internal sealed partial class SectionViewModel : ObservableObject
 /// Sections, navigation and the elevation state of the running process.
 /// </summary>
 /// <remarks>
-/// The rail holds six sections and no more. "Подтверждение и очистка" is not
-/// among them on purpose: it is steps 2, 3 and 4 inside "Файлы", reached with
-/// the button in the action bar. A seventh rail entry would split one flow in
-/// half and let a person walk into a confirmation for a selection they left on
-/// another screen.
+/// Storage analysis is independent from cleanup. Confirmation and deletion remain steps inside Files.
 /// </remarks>
 internal sealed partial class ShellViewModel : ObservableObject
 {
@@ -104,7 +100,8 @@ internal sealed partial class ShellViewModel : ObservableObject
         IScreenViewModel? zhurnal = null,
         IScreenViewModel? reestr = null,
         IScreenViewModel? nastroyki = null,
-        IScreenViewModel? programmy = null)
+        IScreenViewModel? programmy = null,
+        IScreenViewModel? storage = null)
     {
         IsElevated = isElevated;
 
@@ -112,6 +109,7 @@ internal sealed partial class ShellViewModel : ObservableObject
         [
             new SectionViewModel("overview", "Обзор", obzor),
             new SectionViewModel("files", "Файлы", fayly),
+            new SectionViewModel("storage", "Место на диске", storage),
             new SectionViewModel("apps", "Программы", programmy),
             new SectionViewModel("registry", "Реестр", reestr),
             new SectionViewModel("history", "Журнал", zhurnal),
@@ -123,8 +121,7 @@ internal sealed partial class ShellViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Read-only on purpose: the six sections are fixed by the spec, and a
-    /// collection that can grow invites a seventh one to appear at run time.
+    /// Read-only navigation; scanning does not invent new sections at runtime.
     /// </summary>
     public IReadOnlyList<SectionViewModel> Sections { get; }
 

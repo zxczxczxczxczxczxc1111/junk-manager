@@ -8,6 +8,36 @@ namespace JunkManager.Tests.Ui;
 public sealed class ProgramsScreenTests(UiFixture stend)
 {
     [Fact(Explicit = true)]
+    public async Task Installed_winget_portable_fixture_is_removed_through_the_real_window()
+    {
+        // Install Bun 1.4.2 from a local WinGet manifest in the VM first. Real user packages are not fixtures.
+        JunkManager.Safety.VmFuse.RequireArmed();
+        var inventory = new JunkManager.Core.Apps.ProgramInventory();
+        var before = await inventory.ReadAsync(TestContext.Current.CancellationToken);
+        var fixture = before.Programs.Single(program => program.Id == "User:Oven-sh.Bun__DefaultSource"
+            && program.Version == "1.4.2" && program.Installer == JunkManager.Core.Apps.InstallerKind.WinGetPortable);
+        stend.Perejti("apps");
+        UiFixture.Podozhdat(() => stend.Est("apps-refresh"), TimeSpan.FromMinutes(2)).Should().BeTrue();
+        stend.Nazhat("apps-refresh");
+        UiFixture.Podozhdat(() => stend.Est("apps-search"), TimeSpan.FromMinutes(2)).Should().BeTrue();
+        stend.Vvesti("apps-search", "Bun");
+        UiFixture.Podozhdat(() => stend.Skolko("app-select") == 1, TimeSpan.FromSeconds(30)).Should().BeTrue();
+        stend.OtmetitPervyy("app-select");
+        stend.Nazhat("apps-review");
+        stend.Dostupna("apps-confirm-remove").Should().BeTrue();
+        stend.Nazhat("apps-confirm-remove");
+        UiFixture.Podozhdat(() => stend.Est("apps-summary"), TimeSpan.FromMinutes(3)).Should().BeTrue();
+        var after = await inventory.ProbeAsync(fixture, TestContext.Current.CancellationToken);
+        after.Presence.Should().Be(JunkManager.Core.Apps.ProgramPresence.Absent, after.Reason);
+        System.IO.Directory.Exists(fixture.InstallLocation).Should().BeFalse();
+        stend.TekstyVnutri("apps-results").Should().Contain(text => text.Contains("Удалена", StringComparison.OrdinalIgnoreCase));
+        using var screenshot = stend.Snimok();
+        UiPalette.Sohranit(screenshot, "programs-winget-removed");
+        stend.Nazhat("apps-report-refresh");
+        UiFixture.Podozhdat(() => stend.Est("apps-search"), TimeSpan.FromMinutes(2)).Should().BeTrue();
+    }
+
+    [Fact(Explicit = true)]
     public async Task Installed_msix_is_removed_through_the_real_window()
     {
         // Run explicitly after vm-msix-fixture-guest.ps1; a random Store app is not a fixture.

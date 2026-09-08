@@ -2,7 +2,7 @@ namespace JunkManager.Core.Apps;
 
 public enum UninstallExitStatus { Unknown, Success, RebootRequired, RebootInitiated, AlreadyAbsent, Cancelled, Busy, Failed }
 
-public sealed record UninstallProgress(string ProgramId, string Executable, int ProcessId, TimeSpan Elapsed, bool CheckingRegistration);
+public sealed record UninstallProgress(string ProgramId, string Executable, int? ProcessId, TimeSpan Elapsed, bool CheckingRegistration);
 
 public sealed record UninstallOptions
 {

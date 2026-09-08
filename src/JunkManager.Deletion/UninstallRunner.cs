@@ -60,10 +60,17 @@ public sealed class UninstallRunner
         _testGuard?.Invoke();
         Validate(options);
         if (ct.IsCancellationRequested) { return await Record(program, new(program.Id, UninstallOutcome.Cancelled, null, 0, "очередь отменена до запуска")).ConfigureAwait(false); }
-        if ((!command.Quiet && !allowWindow) || !Path.IsPathFullyQualified(command.Executable))
+        if ((!command.Quiet && !allowWindow) || (command.WinGet is null && !Path.IsPathFullyQualified(command.Executable)))
         {
             return await Record(program, new(program.Id, UninstallOutcome.Refused, null, 0,
                 "для деинсталлятора нужно разрешение на окно и полный путь")).ConfigureAwait(false);
+        }
+
+        if (command.WinGet is not null && (!WinGetUninstallRequest.TryCreate(program, out var expected, out _)
+                || expected != command.WinGet))
+        {
+            return await Record(program, new(program.Id, UninstallOutcome.Refused, null, 0,
+                "WinGet: выбранная программа не совпадает с запросом удаления")).ConfigureAwait(false);
         }
         if ((program.Scope is ProgramScope.User or ProgramScope.User32 or ProgramScope.Msix)
             && (!ProgramInventory.CanReadCurrentUser(out _) || (program.UserSid is not null
@@ -84,8 +91,18 @@ public sealed class UninstallRunner
             if (existing is not null) { Active.TryRemove(new KeyValuePair<string, Task<UninstallProcessExit>>(program.Id, existing)); }
         }
 
-        UninstallProcess operation;
-        try { operation = await UninstallProcess.StartAsync(command, _processTree).ConfigureAwait(false); }
+        (int? Id, Task<UninstallProcessExit> Completion) operation;
+        try
+        {
+            if (command.WinGet is { } request)
+            { operation = (null, WinGetUserWorker.NeedsWorker(request.Scope)
+                ? WinGetUserWorker.StartAsync(program) : WinGetUninstaller.RunAsync(program, request)); }
+            else
+            {
+                var process = await UninstallProcess.StartAsync(command, _processTree).ConfigureAwait(false);
+                operation = (process.Id, process.Completion);
+            }
+        }
         catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException or IOException)
         {
             reservation.TrySetResult(new(-1, ex.Message, true));
@@ -209,7 +226,8 @@ public sealed class UninstallRunner
             RebootInitiated = classification == UninstallExitStatus.RebootInitiated,
             QueueCancelled = ct.IsCancellationRequested, ProcessId = operation.Id,
             Executable = command.Executable, Elapsed = timer.Elapsed,
-            ProcessTreeVerified = treeVerified,
+            // The API confirms its transaction; it does not lend us a fictitious process tree.
+            ProcessTreeVerified = treeVerified && command.WinGet is null,
         }).ConfigureAwait(false);
     }
 
