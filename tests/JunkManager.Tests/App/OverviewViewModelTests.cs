@@ -54,6 +54,33 @@ public sealed class OverviewViewModelTests
         }
     }
 
+    [Fact]
+    public async Task Stopped_scan_can_be_started_again_and_finish_normally()
+    {
+        var scanner = new RestartScanner();
+        using var model = new OverviewViewModel(scanner);
+        var first = model.SkanirovatCommand.ExecuteAsync(null);
+        await model.OtmenitCommand.ExecuteAsync(null);
+        await first;
+        model.State.EmptyTitle.Should().Contain("остановлено");
+        model.SkanirovatCommand.CanExecute(null).Should().BeTrue();
+        await model.SkanirovatCommand.ExecuteAsync(null);
+        model.State.Phase.Should().Be(ScreenPhase.Ready);
+        model.FoundBytes.Should().Be(123);
+        model.State.HasRestriction.Should().BeFalse();
+    }
+
+    private sealed class RestartScanner : JunkManager.App.Services.IScanService
+    {
+        private int _runs;
+        public int RulesCount => 1;
+        public async Task<ScanResult> ScanAsync(IProgress<ScanProgress>? progress, CancellationToken ct)
+        {
+            if (++_runs == 1) await Task.Delay(Timeout.InfiniteTimeSpan, ct);
+            return new ScanResult([Nahodka("cache", "apps", 123)], []);
+        }
+    }
+
     private static Finding Nahodka(
         string imya, string kategoriya, long bayt, RiskTier stupen = RiskTier.Safe) =>
         new(imya, $"C:\\{kategoriya}\\{imya}", bayt, stupen,

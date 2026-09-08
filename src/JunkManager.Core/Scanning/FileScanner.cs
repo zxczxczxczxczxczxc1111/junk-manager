@@ -25,6 +25,7 @@ public sealed class FileScanner(TimeProvider? time = null,
         var findings = new List<Finding>();
         var skipped = new List<SkippedItem>();
         var sizes = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
+        var lastProgress = Environment.TickCount64;
         foreach (var rule in rules)
         {
             if (ct.IsCancellationRequested) break;
@@ -56,6 +57,11 @@ public sealed class FileScanner(TimeProvider? time = null,
                     pending.Push(root.Value);
                     while (pending.TryPop(out var current) && !ct.IsCancellationRequested)
                     {
+                        if (Environment.TickCount64 - lastProgress >= 250)
+                        {
+                            progress?.Report(rule.Name + ": " + current);
+                            lastProgress = Environment.TickCount64;
+                        }
                         if (!CleanupPathPolicy.TryVerify(root.Value, out var freshRoot, out reason)
                             || !CleanupPathPolicy.TryVerify(current, out var checkedPath, out reason)
                             || !SafetyGuard.Contains(freshRoot, checkedPath))
@@ -109,21 +115,25 @@ public sealed class FileScanner(TimeProvider? time = null,
                 }
             }
         }
-        return new ScanResult(Merge(findings, sizes, skipped), skipped, ct.IsCancellationRequested);
+        progress?.Report("Проверяем повторяющиеся находки");
+        return new ScanResult(Merge(findings, sizes, skipped, ct), skipped, ct.IsCancellationRequested);
     }
 
-    private static List<Finding> Merge(List<Finding> findings, Dictionary<string, long> sizes, List<SkippedItem> skipped)
+    private static List<Finding> Merge(List<Finding> findings, Dictionary<string, long> sizes, List<SkippedItem> skipped, CancellationToken ct)
     {
         var merged = new List<Finding>();
         var owners = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         foreach (var finding in findings.OrderBy(item => item.Path.Length)
             .ThenBy(item => item.Path, StringComparer.OrdinalIgnoreCase).ThenBy(item => item.RuleId, StringComparer.Ordinal))
         {
+            if (ct.IsCancellationRequested) break;
             var remaining = new List<string>();
+            long remainingBytes = 0;
             var absorbed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var target in finding.DeletionTargets.Order(StringComparer.OrdinalIgnoreCase))
+            foreach (var target in finding.DeletionTargets)
             {
-                if (!owners.TryGetValue(target, out var index)) { remaining.Add(target); continue; }
+                if (ct.IsCancellationRequested) return merged;
+                if (!owners.TryGetValue(target, out var index)) { remaining.Add(target); remainingBytes += sizes[target]; continue; }
                 var owner = merged[index];
                 absorbed.Add(owner.Path);
                 // Deduplication must not launder a risky rule into a safe checkbox. Accounting is not absolution.
@@ -138,8 +148,12 @@ public sealed class FileScanner(TimeProvider? time = null,
             }
             if (absorbed.Count > 0) skipped.Add(new(finding.Path, "файлы уже посчитаны по пути " + string.Join(", ", absorbed)));
             if (remaining.Count == 0) continue;
-            foreach (var target in remaining) owners.Add(target, merged.Count);
-            merged.Add(finding with { Targets = remaining, SizeBytes = remaining.Sum(target => sizes[target]) });
+            foreach (var target in remaining)
+            {
+                if (ct.IsCancellationRequested) return merged;
+                owners.Add(target, merged.Count);
+            }
+            merged.Add(finding with { Targets = remaining, SizeBytes = remainingBytes });
         }
         return merged;
     }

@@ -2,157 +2,119 @@ using JunkManager.Safety;
 
 namespace JunkManager.Core.Scanning;
 
-/// <summary>
-/// Merges findings from a second source into a scan, dropping anything whose
-/// bytes are already counted.
-/// </summary>
-/// <remarks>
-/// <para>
-/// Deduplication by nesting exists inside <see cref="FileScanner"/>, but it runs
-/// during the pass over the rules and therefore sees rules only. Between sources
-/// there was nothing at all, and the closest collision is real: LeftoverFinder
-/// proposes a Cache subdirectory while the browser rules already take that exact
-/// path. Counted twice, 5000 bytes on disk are shown as 10000, and a person
-/// decides by that number.
-/// </para>
-/// <para>
-/// On any overlap the added finding loses, in both directions. That is not
-/// symmetry for its own sake: what gets added this way is a guess (a trace), and
-/// what is already in the list came from a rule that knows what it takes. The
-/// dropped path is named in Skipped together with the path that absorbed it,
-/// because a silently dropped finding is indistinguishable from a source that
-/// found nothing, and those two need opposite fixes.
-/// </para>
-/// </remarks>
+/// <summary>Merges sources without counting the same files twice. Earlier findings keep precedence.</summary>
 public static class SliyanieIstochnikov
 {
-    public static ScanResult Slit(
-        ScanResult osnova,
-        IReadOnlyList<Finding> dobavlyaemye,
-        IReadOnlyList<SkippedItem> propuski)
+    public static ScanResult Slit(ScanResult osnova, IReadOnlyList<Finding> dobavlyaemye,
+        IReadOnlyList<SkippedItem> propuski, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(osnova);
         ArgumentNullException.ThrowIfNull(dobavlyaemye);
         ArgumentNullException.ThrowIfNull(propuski);
-
-        var nahodki = new List<Finding>(osnova.Findings);
-        var propushchennye = new List<SkippedItem>(osnova.Skipped);
-        propushchennye.AddRange(propuski);
-
-        foreach (var kandidat in dobavlyaemye)
+        var findings = new List<Finding>(osnova.Findings);
+        var skipped = new List<SkippedItem>(osnova.Skipped);
+        skipped.AddRange(propuski);
+        var index = new CoverageIndex(ct);
+        try
         {
-            if (kandidat.Scope == DeleteScope.SelectedEntries && kandidat.Source != FindingSource.Vacuum)
+            foreach (var finding in osnova.Findings) index.Add(finding);
+            foreach (var candidate in dobavlyaemye)
             {
-                var targets = kandidat.DeletionTargets.Where(target =>
-                    !nahodki.Any(existing => existing.Source != FindingSource.Vacuum
-                        && existing.DeletionTargets.Any(covered => Covers(covered, target)))).ToArray();
-                if (targets.Length == kandidat.DeletionTargets.Count)
+                ct.ThrowIfCancellationRequested();
+                if (candidate.Scope == DeleteScope.SelectedEntries && candidate.Source != FindingSource.Vacuum)
                 {
-                    nahodki.Add(kandidat);
+                    var targets = new List<string>();
+                    foreach (var target in candidate.DeletionTargets)
+                    {
+                        ct.ThrowIfCancellationRequested();
+                        if (!index.Find(target, includeChildren: false, out _)) targets.Add(target);
+                    }
+                    if (targets.Count == candidate.DeletionTargets.Count)
+                    {
+                        Include(candidate);
+                        continue;
+                    }
+                    skipped.Add(new(candidate.Path, "часть файлов уже посчитана другим источником"));
+                    if (targets.Count == 0) continue;
+                    var readable = new List<string>();
+                    long bytes = 0;
+                    foreach (var target in targets)
+                    {
+                        ct.ThrowIfCancellationRequested();
+                        try
+                        {
+                            if (!CleanupPathPolicy.TryVerify(target, out _, out var reason))
+                            { skipped.Add(new(target, reason!)); continue; }
+                            bytes += new FileInfo(target).Length;
+                            readable.Add(target);
+                        }
+                        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                        { skipped.Add(new(target, ex.Message)); }
+                    }
+                    if (readable.Count > 0) Include(candidate with { Targets = readable, SizeBytes = bytes });
                     continue;
                 }
-                propushchennye.Add(new SkippedItem(kandidat.Path, "часть файлов уже посчитана другим источником"));
-                if (targets.Length == 0) continue;
-                var readable = new List<string>();
-                long bytes = 0;
-                foreach (var target in targets)
-                {
-                    try
-                    {
-                        if (!CleanupPathPolicy.TryVerify(target, out _, out var reason))
-                        {
-                            propushchennye.Add(new SkippedItem(target, reason!));
-                            continue;
-                        }
-                        bytes += new FileInfo(target).Length;
-                        readable.Add(target);
-                    }
-                    catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-                    {
-                        propushchennye.Add(new SkippedItem(target, ex.Message));
-                    }
-                }
-                if (readable.Count > 0) nahodki.Add(kandidat with { Targets = readable, SizeBytes = bytes });
-                continue;
-            }
-            if (!Peresekaetsya(kandidat, nahodki, out var pogloshchayushchiy))
-            {
-                nahodki.Add(kandidat);
-                continue;
-            }
 
-            propushchennye.Add(new SkippedItem(
-                kandidat.Path,
-                $"уже посчитан по пути {pogloshchayushchiy}: два источника на один путь "
-                + "удваивают цифру освобождаемого места"));
+                var overlaps = candidate.Source == FindingSource.Vacuum
+                    ? index.Vacuums.TryGetValue(candidate.Path, out var owner)
+                    : index.Find(candidate.Path, includeChildren: true, out owner);
+                if (overlaps)
+                    skipped.Add(new(candidate.Path, $"уже посчитан по пути {owner}: два источника на один путь удваивают цифру освобождаемого места"));
+                else Include(candidate);
+            }
         }
-
-        return new ScanResult(nahodki, propushchennye, osnova.Cancelled);
-    }
-
-    /// <summary>
-    /// Whether the candidate shares bytes with anything already in the list.
-    /// Non-filesystem identities (a registry value, a cleanup handler) never
-    /// overlap a directory and are compared by string only.
-    /// </summary>
-    private static bool Peresekaetsya(
-        Finding kandidat, List<Finding> nahodki, out string? pogloshchayushchiy)
-    {
-        foreach (var uzhe in nahodki)
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
-            if (kandidat.Source == FindingSource.Vacuum || uzhe.Source == FindingSource.Vacuum)
+            // Publish only whole findings. Half a target list with a full size is accounting cosplay.
+            return new(findings, skipped, Cancelled: true);
+        }
+        return new(findings, skipped, osnova.Cancelled || ct.IsCancellationRequested);
+
+        void Include(Finding finding)
+        {
+            findings.Add(finding);
+            index.Add(finding);
+        }
+    }
+
+    private sealed class CoverageIndex(CancellationToken ct)
+    {
+        private readonly Dictionary<string, string> _exact = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, string> _roots = new(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, string> _ancestors = new(StringComparer.OrdinalIgnoreCase);
+        public Dictionary<string, string> Vacuums { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+        public void Add(Finding finding)
+        {
+            ct.ThrowIfCancellationRequested();
+            if (finding.Source == FindingSource.Vacuum)
+            { Vacuums.TryAdd(finding.Path, finding.Path); return; }
+            foreach (var target in finding.DeletionTargets)
             {
-                if (kandidat.Source == uzhe.Source && kandidat.Path.Equals(uzhe.Path, StringComparison.OrdinalIgnoreCase))
+                ct.ThrowIfCancellationRequested();
+                _exact.TryAdd(target, finding.Path);
+                if (!FindingPath.IsFileSystem(target) || !SafetyGuard.TryVerify(target, out var verified, out _)) continue;
+                _roots.TryAdd(verified.Value, finding.Path);
+                for (var path = verified.Value; path is not null; path = Path.GetDirectoryName(path))
                 {
-                    pogloshchayushchiy = uzhe.Path;
-                    return true;
+                    ct.ThrowIfCancellationRequested();
+                    // Shared parents are already indexed all the way up. No family reunion per file.
+                    if (!_ancestors.TryAdd(path, finding.Path)) break;
                 }
-                continue;
-            }
-            if (uzhe.Scope == DeleteScope.SelectedEntries)
-            {
-                if (uzhe.DeletionTargets.Any(target => Covers(kandidat.Path, target) || Covers(target, kandidat.Path)))
-                {
-                    pogloshchayushchiy = uzhe.Path;
-                    return true;
-                }
-                continue;
-            }
-            if (kandidat.Path.Equals(uzhe.Path, StringComparison.OrdinalIgnoreCase))
-            {
-                pogloshchayushchiy = uzhe.Path;
-                return true;
-            }
-
-            if (!FindingPath.IsFileSystem(kandidat.Path) || !FindingPath.IsFileSystem(uzhe.Path))
-            {
-                continue;
-            }
-
-            if (!SafetyGuard.TryVerify(kandidat.Path, out var propuskKandidata, out _)
-                || !SafetyGuard.TryVerify(uzhe.Path, out var propuskUzhe, out _))
-            {
-                // A path the guard refuses is a path nothing will delete anyway.
-                // Containment between two such strings is not worth guessing at.
-                continue;
-            }
-
-            if (SafetyGuard.Contains(propuskUzhe, propuskKandidata)
-                || SafetyGuard.Contains(propuskKandidata, propuskUzhe))
-            {
-                pogloshchayushchiy = uzhe.Path;
-                return true;
             }
         }
 
-        pogloshchayushchiy = null;
-        return false;
+        public bool Find(string target, bool includeChildren, out string? owner)
+        {
+            ct.ThrowIfCancellationRequested();
+            if (_exact.TryGetValue(target, out owner)) return true;
+            if (!FindingPath.IsFileSystem(target) || !SafetyGuard.TryVerify(target, out var verified, out _)) return false;
+            for (var path = verified.Value; path is not null; path = Path.GetDirectoryName(path))
+            {
+                ct.ThrowIfCancellationRequested();
+                if (_roots.TryGetValue(path, out owner)) return true;
+            }
+            return includeChildren && _ancestors.TryGetValue(verified.Value, out owner);
+        }
     }
-
-    private static bool Covers(string root, string path) =>
-        root.Equals(path, StringComparison.OrdinalIgnoreCase)
-        || (FindingPath.IsFileSystem(root) && FindingPath.IsFileSystem(path)
-            && SafetyGuard.TryVerify(root, out var checkedRoot, out _)
-            && SafetyGuard.TryVerify(path, out var checkedPath, out _)
-            && SafetyGuard.Contains(checkedRoot, checkedPath));
 }

@@ -179,7 +179,8 @@ public static class PolnyyProhod
             }
 
             otmeneno |= chast.Cancelled;
-            itog = SliyanieIstochnikov.Slit(itog, chast.Findings, chast.Skipped);
+            progress?.Report("Собираем результаты: " + imya);
+            itog = SliyanieIstochnikov.Slit(itog, chast.Findings, chast.Skipped, ct);
         }
 
         if (plan.Pravila)

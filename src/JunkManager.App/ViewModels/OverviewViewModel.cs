@@ -77,6 +77,7 @@ internal sealed partial class OverviewViewModel(
         }
 
         _otmena = new CancellationTokenSource();
+        var run = _otmena;
 
         State.Ogranichit(null);
         State.Nachat(cancel: OtmenitCommand);
@@ -84,8 +85,12 @@ internal sealed partial class OverviewViewModel(
 
         try
         {
-            var hod = new Progress<ScanProgress>(p => State.Hod(p.Share, p.Path));
-            var itog = await skaner.ScanAsync(hod, _otmena.Token).ConfigureAwait(true);
+            var hod = new Progress<ScanProgress>(p =>
+            {
+                // Yesterday's queued progress does not get to haunt a stopped scan.
+                if (ReferenceEquals(_otmena, run) && !run.IsCancellationRequested) State.Hod(p.Share, p.Path);
+            });
+            var itog = await skaner.ScanAsync(hod, run.Token).ConfigureAwait(true);
             Prinyat(itog);
         }
         catch (OperationCanceledException)
@@ -106,10 +111,20 @@ internal sealed partial class OverviewViewModel(
         {
             State.Oshibka("Сканирование прервано", e.Message, SkanirovatCommand);
         }
+        finally
+        {
+            if (ReferenceEquals(_otmena, run)) _otmena = null;
+            run.Dispose();
+        }
     }
 
     [RelayCommand]
-    private void Otmenit() => _otmena?.Cancel();
+    private async Task OtmenitAsync()
+    {
+        if (_otmena is not { } run) return;
+        State.Hod(null, "Останавливаем проверку…");
+        await run.CancelAsync().ConfigureAwait(true);
+    }
 
     [RelayCommand]
     private void Vybrat(CategoryViewModel? kategoriya)

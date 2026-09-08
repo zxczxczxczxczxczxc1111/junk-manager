@@ -150,6 +150,28 @@ public sealed class PolnyyProhodTests : IDisposable
     }
 
     [Fact]
+    public async Task Cancellation_at_merge_progress_stops_before_the_next_source()
+    {
+        using var stop = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        var messages = new List<string>();
+        var progress = new InlineProgress(message =>
+        {
+            messages.Add(message);
+            if (message.StartsWith("Собираем результаты:", StringComparison.Ordinal)) stop.Cancel();
+        });
+        var plan = ScanPlan.Nichego with { Obnaruzhiteli = true, KorniObnaruzhiteley = [_pesochnica.Root] };
+        var result = await PolnyyProhod.ScanAsync(plan, Pravila, progress, stop.Token);
+        result.Cancelled.Should().BeTrue();
+        messages.Should().Contain("Собираем результаты: кэши Electron");
+        messages.Should().NotContain("брошенные каталоги");
+    }
+
+    private sealed class InlineProgress(Action<string> report) : IProgress<string>
+    {
+        public void Report(string value) => report(value);
+    }
+
+    [Fact]
     public async Task Otkaz_odnogo_istochnika_ne_ronyaet_ves_prohod()
     {
         // Источник, упавший на чужой машине, не имеет права унести с собой
