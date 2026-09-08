@@ -1,0 +1,113 @@
+{
+  "category": "Приложения",
+  "rules": [
+    {
+      "id": "discord-cache",
+      "name": "Кэш Discord",
+      "paths": [
+        "%APPDATA%\\discord\\Cache",
+        "%APPDATA%\\discord\\Code Cache",
+        "%APPDATA%\\discord\\GPUCache",
+        "%APPDATA%\\discordptb\\Cache",
+        "%APPDATA%\\discordptb\\Code Cache",
+        "%APPDATA%\\discordptb\\GPUCache",
+        "%APPDATA%\\discordcanary\\Cache",
+        "%APPDATA%\\discordcanary\\Code Cache",
+        "%APPDATA%\\discordcanary\\GPUCache",
+        "%APPDATA%\\discorddevelopment\\Cache",
+        "%APPDATA%\\discorddevelopment\\Code Cache",
+        "%APPDATA%\\discorddevelopment\\GPUCache"
+      ],
+      "tier": "Risk",
+      "consequence": "Закройте Discord. Картинки и скрипты загрузятся заново; сохранённые в кэше избранные GIF могут пропасть. Вход и настройки не удаляются.",
+      "olderThanDays": 0,
+      "processNames": [
+        "Discord",
+        "DiscordPTB",
+        "DiscordCanary",
+        "DiscordDevelopment"
+      ]
+    },
+    {
+      "id": "slack-cache",
+      "name": "Кэш Slack",
+      "paths": [
+        "%APPDATA%\\Slack\\Cache\\Cache_Data",
+        "%APPDATA%\\Slack\\Code Cache",
+        "%APPDATA%\\Slack\\GPUCache"
+      ],
+      "tier": "Safe",
+      "consequence": "Вложения и аватары подгрузятся заново. Вход и переписка не трогаются.",
+      "olderThanDays": 0,
+      "processNames": [
+        "slack"
+      ]
+    },
+    {
+      "id": "teams-cache",
+      "name": "Кэш Microsoft Teams",
+      "paths": [
+        "%APPDATA%\\Microsoft\\Teams\\Cache",
+        "%APPDATA%\\Microsoft\\Teams\\Code Cache",
+        "%APPDATA%\\Microsoft\\Teams\\GPUCache",
+        "%LOCALAPPDATA%\\Packages\\MSTeams_8wekyb3d8bbwe\\LocalCache\\Microsoft\\MSTeams\\EBWebView\\Default\\Cache",
+        "%LOCALAPPDATA%\\Packages\\MSTeams_8wekyb3d8bbwe\\LocalCache\\Microsoft\\MSTeams\\EBWebView\\Default\\Code Cache",
+        "%LOCALAPPDATA%\\Packages\\MSTeams_8wekyb3d8bbwe\\LocalCache\\Microsoft\\MSTeams\\EBWebView\\Default\\GPUCache"
+      ],
+      "tier": "Safe",
+      "consequence": "Аватары и вложения подгрузятся заново. Вход и переписка не трогаются.",
+      "olderThanDays": 0,
+      "processNames": [
+        "Teams",
+        "ms-teams"
+      ]
+    },
+    {
+      "id": "spotify-cache",
+      "name": "Кэш Spotify",
+      "paths": [
+        "%LOCALAPPDATA%\\Spotify\\Browser\\Cache",
+        "%LOCALAPPDATA%\\Spotify\\Browser\\Code Cache",
+        "%LOCALAPPDATA%\\Spotify\\Browser\\GPUCache"
+      ],
+      "tier": "Safe",
+      "consequence": "Закройте Spotify. Веб-интерфейс загрузит кэш заново. Папки Data, Storage и скачанная музыка не выбираются.",
+      "olderThanDays": 0,
+      "processNames": [
+        "Spotify"
+      ]
+    },
+    {
+      "id": "office-inetcache",
+      "name": "Сетевой кэш Office",
+      "paths": [
+        "%LOCALAPPDATA%\\Microsoft\\Windows\\INetCache\\Content.MSO"
+      ],
+      "tier": "Safe",
+      "consequence": "Закройте Office. Старые временные копии сетевого содержимого будут удалены. OfficeFileCache с ожидающими загрузки документами защищён.",
+      "olderThanDays": 7,
+      "processNames": [
+        "WINWORD",
+        "EXCEL",
+        "POWERPNT",
+        "OUTLOOK"
+      ]
+    },
+    {
+      "id": "adobe-media-cache",
+      "name": "Кэш медиа Adobe",
+      "paths": [
+        "%APPDATA%\\Adobe\\Common\\Media Cache Files",
+        "%APPDATA%\\Adobe\\Common\\Peak Files"
+      ],
+      "tier": "Risk",
+      "consequence": "Проекты придётся заново проиндексировать при открытии, это займёт время на больших сборках. Сами исходники не трогаются.",
+      "olderThanDays": 30,
+      "processNames": [
+        "Adobe Premiere Pro",
+        "AfterFX",
+        "Adobe Media Encoder"
+      ]
+    }
+  ]
+}

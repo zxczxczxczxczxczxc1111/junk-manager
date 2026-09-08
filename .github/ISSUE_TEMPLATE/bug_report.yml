@@ -1,0 +1,34 @@
+name: Ошибка
+description: Расскажи, что не сработало и как это повторить.
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Версия приложения
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Версия Windows
+      placeholder: Windows 11, 24H2, x64
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Что ты сделал
+      description: Шаги, после которых появилась ошибка.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Что ожидалось и что произошло
+    validations:
+      required: true
+  - type: textarea
+    id: attachments
+    attributes:
+      label: Скриншоты и текст ошибки
+      description: Убери личные пути, имена пользователей и другие приватные данные.

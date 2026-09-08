@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <!-- The catalog now lives in the assembly; loose JSON has retired from driving. -->
+    <EmbeddedResource Include="..\..\rules\*.json"
+                      LogicalName="JunkManager.Catalog.%(Filename)%(Extension)" />
+    <EmbeddedResource Include="..\..\rules\sources\*.json"
+                      LogicalName="JunkManager.Catalog.sources.%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      Core ходит в файловую систему только через Safety, поэтому ссылка идёт
+      вниз и только вниз. Обратной ссылки нет и быть не может: Safety обязан
+      собираться и проверяться без единого знания о правилах и находках.
+    -->
+    <ProjectReference Include="..\JunkManager.Safety\JunkManager.Safety.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      Внутреннее видно набору тестов. Открыт PathExpander.ExpandEnvironment:
+      опись посева раскрывает переменные ТЕМ ЖЕ кодом, что и правила, иначе
+      приёмка сравнивает два разных раскрытия и молча расходится с продуктом.
+    -->
+    <InternalsVisibleTo Include="JunkManager.Tests" />
+  </ItemGroup>
+
+</Project>

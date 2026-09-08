@@ -1,0 +1,144 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\JunkManager.Core\JunkManager.Core.csproj" />
+    <ProjectReference Include="..\..\src\JunkManager.Safety\JunkManager.Safety.csproj" />
+    <ProjectReference Include="..\..\src\JunkManager.Deletion\JunkManager.Deletion.csproj" />
+    <ProjectReference Include="..\..\src\JunkManager.App\JunkManager.App.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentAssertions" Version="7.2.2" />
+    <PackageReference Include="xunit.v3" Version="4.0.0" />
+    <!--
+      Живые тесты интерфейса. UIA3, а не UIA2: второй это старый мост, который
+      не показывает часть свойств WPF, и проверка имён элементов на нём молча
+      теряет половину дерева.
+    -->
+    <PackageReference Include="FlaUI.UIA3" Version="5.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      Настоящие файлы правил едут рядом с набором тестов. Не для удобства:
+      набор публикуется самодостаточным и уезжает в гость, где никакого
+      репозитория нет, а тест обязан грузить ТЕ ЖЕ правила, что и продукт.
+      Поиск каталога вверх по дереву работал бы только на машине разработчика.
+    -->
+    <Content Include="..\..\rules\**\*.json" Link="rules\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      Опись посева едет вместе с набором. Тот же довод, что и у правил: в госте
+      репозитория нет, а приёмка обязана сеять ровно то, что описано в
+      polygon/posev.json, а не свою копию.
+    -->
+    <Content Include="..\..\polygon\posev.json" Link="posev.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      Образцы вывода утилит едут рядом с набором тестов: разбор проверяется на
+      том, что утилита печатает на самом деле, а не на том, что помнит автор.
+    -->
+    <Content Include="Infrastructure\Obraztsy\**\*.*" Link="obraztsy\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The hygiene tests read the markup as text. Copying it here beats loading
+         it through WPF: no STA thread, no Application instance, no pack URI, and
+         a broken copy is caught by name below instead of turning every check
+         silently green. -->
+    <None Include="..\..\src\JunkManager.App\**\*.xaml"
+          Exclude="..\..\src\JunkManager.App\bin\**\*.xaml;..\..\src\JunkManager.App\obj\**\*.xaml"
+          Link="XamlSource\%(RecursiveDir)%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <Target Name="PolozhitPrilozhenieRyadom" AfterTargets="Build"
+          Condition="'$(SborkaBezPrilozheniya)' != 'true'">
+    <!--
+      Живые тесты запускают СОБРАННЫЙ exe, а не типы из ссылки на проект.
+      Ссылка дала бы окно, поднятое внутри процесса тестов: другой манифест,
+      другая осведомлённость о масштабе, другое приложение. Проверять надо то,
+      что поедет человеку.
+
+      Публикация идёт в подкаталог app рядом с набором и повторяет параметры
+      выката: тот же runtime identifier, самодостаточно, без склейки в один
+      файл. Свойство SborkaBezPrilozheniya оставлено для быстрых прогонов
+      Sandbox, где окно не поднимается вовсе.
+    -->
+    <MSBuild Projects="..\..\src\JunkManager.App\JunkManager.App.csproj"
+             Targets="Publish"
+             Properties="Configuration=$(Configuration);RuntimeIdentifier=win-x64;SelfContained=true;PublishSingleFile=false;PublishDir=$(MSBuildProjectDirectory)\$(OutDir)app\" />
+  </Target>
+
+  <Target Name="PolozhitUtilituRyadom" AfterTargets="Build">
+    <!--
+      Утилита едет С НАБОРОМ, ровно по той же причине, что и приложение выше.
+      Раньше CliTests искали её, поднимаясь по дереву до JunkManager.slnx. В
+      госте репозитория нет вовсе, поэтому весь класс падал
+      TypeInitializationException-ом ещё до первой проверки: шесть проверок CLI
+      были зелёными только на машине разработчика. Найдено прогоном в госте
+      07.09.2026.
+
+      Публикация self-contained: в госте нет ни SDK, ни среды выполнения.
+    -->
+    <MSBuild Projects="..\..\src\JunkManager.Cli\JunkManager.Cli.csproj"
+             Targets="Publish"
+             Properties="Configuration=$(Configuration);RuntimeIdentifier=win-x64;SelfContained=true;PublishSingleFile=false;PublishDir=$(MSBuildProjectDirectory)\$(OutDir)cli\" />
+  </Target>
+
+  <Target Name="PolozhitUtilituVPublikaciyu" AfterTargets="Publish">
+    <!-- Тот же довод, что и у приложения: dotnet publish -o собирает свой набор
+         файлов, и подкаталог bin\cli в него не попадает. -->
+    <PropertyGroup>
+      <KudaUtilita Condition="'$([System.IO.Path]::IsPathRooted($(PublishDir)))' == 'true'">$(PublishDir)cli\</KudaUtilita>
+      <KudaUtilita Condition="'$(KudaUtilita)' == ''">$(MSBuildProjectDirectory)\$(PublishDir)cli\</KudaUtilita>
+    </PropertyGroup>
+
+    <MSBuild Projects="..\..\src\JunkManager.Cli\JunkManager.Cli.csproj"
+             Targets="Publish"
+             Properties="Configuration=$(Configuration);RuntimeIdentifier=win-x64;SelfContained=true;PublishSingleFile=false;PublishDir=$(KudaUtilita)" />
+  </Target>
+
+  <Target Name="PolozhitPrilozhenieVPublikaciyu" AfterTargets="Publish">
+    <!--
+      Отдельная цель, а не та же самая. Проверено прогоном 05.09.2026: цель
+      после Build кладёт приложение в bin, а `dotnet publish -o` собирает
+      публикацию из СВОЕГО набора файлов и подкаталог bin\app в неё не
+      попадает. В госте это выглядело как «цель не отработала», хотя она
+      отработала, просто не туда.
+    -->
+    <PropertyGroup>
+      <KudaPrilozhenie Condition="'$([System.IO.Path]::IsPathRooted($(PublishDir)))' == 'true'">$(PublishDir)app\</KudaPrilozhenie>
+      <KudaPrilozhenie Condition="'$(KudaPrilozhenie)' == ''">$(MSBuildProjectDirectory)\$(PublishDir)app\</KudaPrilozhenie>
+    </PropertyGroup>
+
+    <MSBuild Projects="..\..\src\JunkManager.App\JunkManager.App.csproj"
+             Targets="Publish"
+             Properties="Configuration=$(Configuration);RuntimeIdentifier=win-x64;SelfContained=true;PublishSingleFile=false;PublishDir=$(KudaPrilozhenie)" />
+  </Target>
+
+
+  <!-- Old loose catalogs do not vanish because an ItemGroup stopped inviting them. -->
+  <Target Name="UbratStaryePravilaSborki" AfterTargets="Build"
+          Condition="'$(DesignTimeBuild)' != 'true' and '$(TargetDir)' != ''">
+    <Exec Command="powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)..\..\scripts\publish.ps1&quot; -CleanLegacyRules"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          EnvironmentVariables="JUNKMANAGER_LEGACY_OUTPUT=$(TargetDir);JUNKMANAGER_LEGACY_KIND=Tests" />
+  </Target>
+
+  <Target Name="UbratStaryePravilaPublikacii" AfterTargets="Publish"
+          Condition="'$(DesignTimeBuild)' != 'true' and '$(PublishDir)' != ''">
+    <Exec Command="powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)..\..\scripts\publish.ps1&quot; -CleanLegacyRules"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          EnvironmentVariables="JUNKMANAGER_LEGACY_OUTPUT=$(PublishDir);JUNKMANAGER_LEGACY_KIND=Tests" />
+  </Target>
+
+</Project>

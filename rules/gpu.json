@@ -1,0 +1,40 @@
+{
+  "category": "Видеокарта",
+  "rules": [
+    {
+      "id": "nvidia-shader-cache",
+      "name": "Кэш шейдеров NVIDIA",
+      "paths": [
+        "%LOCALAPPDATA%\\NVIDIA\\DXCache",
+        "%LOCALAPPDATA%\\NVIDIA\\GLCache",
+        "%LOCALAPPDATA%\\NVIDIA Corporation\\NV_Cache"
+      ],
+      "tier": "Safe",
+      "consequence": "Драйвер соберёт шейдеры заново. Первый запуск игры или тяжёлого приложения будет чуть дольше.",
+      "olderThanDays": 0
+    },
+    {
+      "id": "amd-shader-cache",
+      "name": "Кэш шейдеров AMD",
+      "paths": [
+        "%LOCALAPPDATA%\\AMD\\DxCache",
+        "%LOCALAPPDATA%\\AMD\\GLCache",
+        "%LOCALAPPDATA%\\AMD\\DxcCache",
+        "%LOCALAPPDATA%\\AMD\\VkCache"
+      ],
+      "tier": "Safe",
+      "consequence": "Драйвер соберёт шейдеры заново при следующем запуске игры.",
+      "olderThanDays": 0
+    },
+    {
+      "id": "intel-shader-cache",
+      "name": "Кэш шейдеров Intel",
+      "paths": [
+        "%LOCALAPPDATA%\\Intel\\ShaderCache"
+      ],
+      "tier": "Safe",
+      "consequence": "Драйвер соберёт шейдеры заново при следующем запуске игры.",
+      "olderThanDays": 0
+    }
+  ]
+}

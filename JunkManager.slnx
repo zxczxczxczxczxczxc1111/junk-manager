@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/JunkManager.App/JunkManager.App.csproj" />
+    <Project Path="src/JunkManager.Cli/JunkManager.Cli.csproj" />
+    <Project Path="src/JunkManager.Core/JunkManager.Core.csproj" />
+    <Project Path="src/JunkManager.Deletion/JunkManager.Deletion.csproj" />
+    <Project Path="src/JunkManager.Safety/JunkManager.Safety.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/JunkManager.Tests/JunkManager.Tests.csproj" />
+  </Folder>
+</Solution>

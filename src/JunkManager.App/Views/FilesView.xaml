@@ -1,0 +1,660 @@
+<UserControl x:Class="JunkManager.App.Views.FilesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:b="clr-namespace:JunkManager.App.Controls.Behaviors"
+             xmlns:c="clr-namespace:JunkManager.App.Controls"
+             xmlns:conv="clr-namespace:JunkManager.App.Converters"
+             xmlns:vm="clr-namespace:JunkManager.App.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             d:DataContext="{d:DesignInstance Type=vm:FilesViewModel}"
+             mc:Ignorable="d"
+             x:ClassModifier="internal">
+
+  <UserControl.Resources>
+    <conv:ByteSizeConverter x:Key="Razmer"/>
+    <conv:PluralConverter x:Key="Sklonenie"/>
+    <conv:EnumEqualsConverter x:Key="Shag"/>
+    <conv:BoolToVisibilityConverter x:Key="VidnoKogdaDa"/>
+    <conv:BoolToVisibilityConverter x:Key="VidnoKogdaNet" Invert="True"/>
+  </UserControl.Resources>
+
+  <!-- Четыре шага одного потока лежат друг на друге, и видимость решает один
+       и тот же признак. Отдельных экранов у шагов нет намеренно: пункт меню
+       на подтверждении оставлял бы человека там, где он выбирал файлы. -->
+  <Grid>
+
+    <!-- ==== Шаг 1 из 4: выбор ==== -->
+    <Grid Visibility="{Binding Step, Converter={StaticResource Shag},
+                       ConverterParameter=Selection}"
+          AutomationProperties.AutomationId="files-step-selection">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="*"/>
+        <RowDefinition Height="Auto"/>
+      </Grid.RowDefinitions>
+
+      <!-- ==== Шапка ==== -->
+      <Grid Grid.Row="0" Margin="0,0,0,18">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <StackPanel Grid.Column="0">
+          <c:TrackedText Text="ФАЙЛЫ / ШАГ 1 ИЗ 4"
+                         Tracking="{StaticResource TrackingEyebrow}"
+                         FontFamily="{StaticResource TextFont}"
+                         FontSize="{StaticResource FontSizeEyebrow}"
+                         Foreground="{StaticResource Ink3Brush}"/>
+          <TextBlock FontFamily="{StaticResource DisplayFont}"
+                     FontSize="{StaticResource FontSizeH1}"
+                     Margin="0,6,0,0"
+                     AutomationProperties.AutomationId="files-heading">
+            <Run Text="Отмечено" Foreground="{StaticResource Ink3Brush}"/>
+            <Run Text="{Binding SelectedBytes, Converter={StaticResource Razmer}, Mode=OneWay}"
+                 Foreground="{StaticResource InkBrush}" FontWeight="Bold"/>
+            <Run Text="из" Foreground="{StaticResource Ink3Brush}"/>
+            <Run Text="{Binding TotalBytes, Converter={StaticResource Razmer}, Mode=OneWay}"
+                 Foreground="{StaticResource Ink3Brush}"/>
+          </TextBlock>
+        </StackPanel>
+
+        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+          <Button Content="Снять всё"
+                  Style="{StaticResource SmallButton}"
+                  Margin="0,0,10,0"
+                  Command="{Binding SnyatVsyoCommand}"
+                  AutomationProperties.AutomationId="files-clear"/>
+          <Button Content="Отметить безопасное"
+                  Style="{StaticResource SmallButton}"
+                  Command="{Binding OtmetitBezopasnoeCommand}"
+                  AutomationProperties.AutomationId="files-mark-safe"/>
+        </StackPanel>
+      </Grid>
+
+      <!-- ==== Таблица находок ==== -->
+      <Border Grid.Row="1" Background="{StaticResource CardBrush}"
+              BorderBrush="{StaticResource LineBrush}" BorderThickness="1">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+          </Grid.RowDefinitions>
+
+          <Border Grid.Row="0" Style="{StaticResource TableHeader}">
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+              </Grid.ColumnDefinitions>
+
+              <TextBlock Grid.Column="0" Text="Что удалить"
+                         Style="{StaticResource ColumnLabel}" Margin="27,0,0,0"/>
+              <TextBlock Grid.Column="2" Text="Размер и ступень"
+                         Style="{StaticResource ColumnLabel}"/>
+            </Grid>
+          </Border>
+
+          <!-- ListBox, а не ItemsControl: строку надо уметь выделить с клавиатуры
+               и дойти до неё стрелками. Отметка к удалению при этом живёт во
+               флажке, а не в выделении: выделение это «я сюда смотрю», флажок это
+               «это уйдёт», и путать их нельзя. -->
+          <ListBox Grid.Row="1" ItemsSource="{Binding Rows}"
+                   AutomationProperties.AutomationId="files-list">
+            <ListBox.ItemTemplate>
+              <DataTemplate DataType="{x:Type vm:FindingViewModel}">
+                <Grid Margin="{StaticResource PadRow}">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                  </Grid.ColumnDefinitions>
+
+                  <CheckBox Grid.Column="0"
+                            IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                            VerticalAlignment="Top" Margin="0,1,12,0"
+                            AutomationProperties.Name="{Binding Name}"
+                            AutomationProperties.AutomationId="files-row-check"/>
+
+                  <StackPanel Grid.Column="1" Margin="0,0,18,0">
+                    <TextBlock Text="{Binding Name}"
+                               FontFamily="{StaticResource TextFont}"
+                               FontSize="{StaticResource FontSizeRow}"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource InkBrush}"
+                               TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Text="{Binding Consequence}"
+                               FontFamily="{StaticResource TextFont}"
+                               FontSize="{StaticResource FontSizeSub}"
+                               Foreground="{StaticResource Ink2Brush}"
+                               TextWrapping="Wrap" LineHeight="18"
+                               Margin="0,4,0,0"/>
+                    <TextBlock Text="{Binding Path}"
+                               FontFamily="{StaticResource MonoFont}"
+                               FontSize="{StaticResource FontSizePath}"
+                               Foreground="{StaticResource InkPathBrush}"
+                               TextTrimming="CharacterEllipsis"
+                               Margin="0,5,0,0"/>
+                    <TextBlock Text="{Binding ScopeLabel}"
+                               FontFamily="{StaticResource TextFont}"
+                               FontSize="{StaticResource FontSizeMeta}"
+                               Foreground="{StaticResource Ink3Brush}"
+                               Margin="0,4,0,0"/>
+                  </StackPanel>
+
+                  <StackPanel Grid.Column="2" HorizontalAlignment="Right">
+                    <TextBlock HorizontalAlignment="Right"
+                               FontFamily="{StaticResource MonoFont}"
+                               FontSize="{StaticResource FontSizeRow}"
+                               Foreground="{StaticResource InkBrush}"
+                               Text="{Binding SizeBytes,
+                                      Converter={StaticResource Razmer}, Mode=OneWay}"/>
+                    <c:RiskChip Tier="{Binding Tier}" Margin="0,7,0,0"
+                                HorizontalAlignment="Right"/>
+                    <TextBlock Text="{Binding AgeLabel}"
+                               HorizontalAlignment="Right"
+                               FontFamily="{StaticResource MonoFont}"
+                               FontSize="{StaticResource FontSizeChip}"
+                               Foreground="{StaticResource Ink3Brush}"
+                               Margin="0,6,0,0"/>
+                  </StackPanel>
+                </Grid>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </Grid>
+      </Border>
+
+      <!-- ==== Панель действия ==== -->
+      <Border Grid.Row="2" Background="{StaticResource PanelBrush}"
+              BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+              Padding="{StaticResource PadRow}" Margin="0,14,0,0">
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+          </Grid.ColumnDefinitions>
+
+          <StackPanel Grid.Column="0">
+            <TextBlock FontFamily="{StaticResource DisplayFont}"
+                       FontSize="{StaticResource FontSizeSectionTitle}"
+                       Foreground="{StaticResource InkBrush}"
+                       Text="{Binding SelectedBytes, Converter={StaticResource Razmer}, Mode=OneWay}"
+                       AutomationProperties.AutomationId="files-selected-bytes"/>
+            <TextBlock FontFamily="{StaticResource TextFont}"
+                       FontSize="{StaticResource FontSizeMeta}"
+                       Foreground="{StaticResource Ink3Brush}"
+                       Margin="0,3,0,0"
+                       Text="{Binding SelectedCount, Converter={StaticResource Sklonenie},
+                              ConverterParameter='находка отмечена|находки отмечены|находок отмечено',
+                              Mode=OneWay}"
+                       AutomationProperties.AutomationId="files-selected-count"/>
+          </StackPanel>
+
+          <!-- Кнопка выключена, пока не отмечено ничего. Ведущая на пустое
+               подтверждение кнопка это шаг, который ничего не подтверждает. -->
+          <Button Grid.Column="2" Content="Проверить и удалить"
+                  Style="{StaticResource PrimaryButton}"
+                  Command="{Binding KPodtverzhdeniyuCommand}"
+                  IsEnabled="{Binding CanGoToConfirm}"
+                  AutomationProperties.AutomationId="files-to-confirm"/>
+        </Grid>
+      </Border>
+    </Grid>
+
+    <!-- ==== Шаг 2 из 4: подтверждение ==== -->
+    <Grid Visibility="{Binding Step, Converter={StaticResource Shag},
+                       ConverterParameter=Confirm}"
+          AutomationProperties.AutomationId="files-step-confirm">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="*"/>
+      </Grid.RowDefinitions>
+
+      <Grid Grid.Row="0" Margin="0,0,0,18">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <StackPanel Grid.Column="0">
+          <c:TrackedText Text="ФАЙЛЫ / ШАГ 2 ИЗ 4"
+                         Tracking="{StaticResource TrackingEyebrow}"
+                         FontFamily="{StaticResource TextFont}"
+                         FontSize="{StaticResource FontSizeEyebrow}"
+                         Foreground="{StaticResource Ink3Brush}"/>
+          <TextBlock FontFamily="{StaticResource DisplayFont}"
+                     FontSize="{StaticResource FontSizeH1}" Margin="0,6,0,0">
+            <Run Text="Будет удалено" Foreground="{StaticResource Ink3Brush}"/>
+            <Run Text="безвозвратно" Foreground="{StaticResource InkBrush}" FontWeight="Bold"/>
+          </TextBlock>
+          <TextBlock FontFamily="{StaticResource TextFont}"
+                     FontSize="{StaticResource FontSizeSub}"
+                     Foreground="{StaticResource Ink2Brush}"
+                     Margin="0,8,0,0"
+                     Text="Полный список: не число объектов, а каждый путь. Корзина не используется"/>
+        </StackPanel>
+
+        <Button Grid.Column="1" Content="Назад к выбору" VerticalAlignment="Center"
+                Command="{Binding NazadKVyboruCommand}"
+                AutomationProperties.AutomationId="confirm-back"/>
+      </Grid>
+
+      <Grid Grid.Row="1">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="300"/>
+        </Grid.ColumnDefinitions>
+
+        <Border Grid.Column="0" Background="{StaticResource CardBrush}"
+                BorderBrush="{StaticResource LineBrush}" BorderThickness="1">
+          <!--
+            Прокрутка меряется в ПИКСЕЛЯХ, а не в строках. Ворота «долистано до
+            конца» имеют допуск в две единицы, и две строки это дыра в целый
+            экран на длинном списке, а два пикселя это дробный хвост прокрутки.
+            Виртуализация при этом остаётся: ScrollUnit=Pixel её не отменяет.
+
+            Наблюдение висит на самом списке, а не на прокрутке внутри его
+            шаблона: ScrollChanged всплывает, поэтому лезть в шаблон не нужно.
+          -->
+          <ListBox ItemsSource="{Binding Rows}"
+                   VirtualizingPanel.ScrollUnit="Pixel"
+                   b:ScrolledToEnd.Watch="True"
+                   b:ScrolledToEnd.Reached="{Binding Confirmed, Mode=OneWayToSource}"
+                   AutomationProperties.AutomationId="confirm-list">
+            <ListBox.ItemContainerStyle>
+              <Style TargetType="{x:Type ListBoxItem}"
+                     BasedOn="{StaticResource {x:Type ListBoxItem}}">
+                <!-- Неотмеченные строки на подтверждении не показываются вовсе.
+                     Согласие даётся на список, и лишние строки в нём это
+                     согласие не на то, что произойдёт. -->
+                <Setter Property="Visibility"
+                        Value="{Binding IsSelected, Converter={StaticResource VidnoKogdaDa}}"/>
+              </Style>
+            </ListBox.ItemContainerStyle>
+            <ListBox.ItemTemplate>
+              <DataTemplate DataType="{x:Type vm:FindingViewModel}">
+                <Grid Margin="{StaticResource PadRow}">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="112"/>
+                  </Grid.ColumnDefinitions>
+
+                  <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                    <TextBlock Text="{Binding Name}"
+                               FontFamily="{StaticResource TextFont}"
+                               FontSize="{StaticResource FontSizeRow}"
+                               FontWeight="SemiBold"
+                               Foreground="{StaticResource InkBrush}"
+                               TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Text="{Binding Path}"
+                               FontFamily="{StaticResource MonoFont}"
+                               FontSize="{StaticResource FontSizePath}"
+                               Foreground="{StaticResource InkPathBrush}"
+                               TextTrimming="CharacterEllipsis" Margin="0,5,0,0"/>
+                    <!-- Ровно то, ради чего этот экран существует: видно,
+                         уйдёт каталог целиком или только файлы внутри. -->
+                    <TextBlock Text="{Binding ScopeLabel}"
+                               FontFamily="{StaticResource TextFont}"
+                               FontSize="{StaticResource FontSizeMeta}"
+                               Foreground="{StaticResource Ink2Brush}"
+                               Margin="0,5,0,0"
+                               AutomationProperties.AutomationId="confirm-row-scope"/>
+                  </StackPanel>
+
+                  <TextBlock Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top"
+                             Margin="0,0,16,0"
+                             FontFamily="{StaticResource MonoFont}"
+                             FontSize="{StaticResource FontSizeRow}"
+                             Foreground="{StaticResource InkBrush}"
+                             Text="{Binding SizeBytes, Converter={StaticResource Razmer}, Mode=OneWay}"/>
+
+                  <c:RiskChip Grid.Column="2" Tier="{Binding Tier}"
+                              VerticalAlignment="Top" HorizontalAlignment="Left"/>
+                </Grid>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </Border>
+
+        <StackPanel Grid.Column="1" Margin="16,0,0,0">
+          <Border Background="{StaticResource PanelBrush}"
+                  BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+                  Padding="{StaticResource PadRow}" Margin="0,0,0,12">
+            <StackPanel>
+              <c:TrackedText Text="ОСВОБОДИТСЯ"
+                             Tracking="{StaticResource TrackingEyebrow}"
+                             FontFamily="{StaticResource TextFont}"
+                             FontSize="{StaticResource FontSizeEyebrow}"
+                             Foreground="{StaticResource Ink3Brush}"/>
+              <TextBlock FontFamily="{StaticResource DisplayFont}"
+                         FontSize="{StaticResource FontSizeH1}"
+                         Foreground="{StaticResource InkBrush}"
+                         Margin="0,8,0,0"
+                         Text="{Binding SelectedBytes, Converter={StaticResource Razmer}, Mode=OneWay}"
+                         AutomationProperties.AutomationId="confirm-total"/>
+            </StackPanel>
+          </Border>
+
+          <!-- Разбивка по областям удаления, а не только по числу объектов.
+               «3 412 объектов» ничего не говорит о том, останутся ли каталоги. -->
+          <Border Background="{StaticResource PanelBrush}"
+                  BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+                  Padding="{StaticResource PadRow}" Margin="0,0,0,12">
+            <StackPanel>
+              <TextBlock FontFamily="{StaticResource TextFont}"
+                         FontSize="{StaticResource FontSizeSub}"
+                         Foreground="{StaticResource Ink2Brush}"
+                         TextWrapping="Wrap"
+                         Text="{Binding WholeCount, Converter={StaticResource Sklonenie},
+                                ConverterParameter='каталог уйдёт целиком|каталога уйдут целиком|каталогов уйдут целиком', Mode=OneWay}"
+                         AutomationProperties.AutomationId="confirm-whole-count"/>
+              <!-- Одной привязкой, а не набором Run: WPF ставит между Run
+                   пробел, и запятая уезжала от слова. -->
+              <TextBlock Text="{Binding EntrySummary, Mode=OneWay}"
+                         FontFamily="{StaticResource TextFont}"
+                         FontSize="{StaticResource FontSizeSub}"
+                         Foreground="{StaticResource Ink2Brush}"
+                         TextWrapping="Wrap" Margin="0,7,0,0"
+                         AutomationProperties.AutomationId="confirm-entry-count"/>
+            </StackPanel>
+          </Border>
+
+          <!-- Точки восстановления здесь нет намеренно. Она не возвращает
+               удалённые файлы вовсе, она про системные параметры, и флажок с
+               таким названием на экране безвозвратного удаления обещал бы
+               обратимость, которой не будет. Её место в модуле реестра. -->
+          <Border Background="{StaticResource PanelBrush}"
+                  BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+                  Padding="{StaticResource PadRow}" Margin="0,0,0,12">
+            <TextBlock FontFamily="{StaticResource TextFont}"
+                       FontSize="{StaticResource FontSizeMeta}"
+                       Foreground="{StaticResource Ink2Brush}"
+                       TextWrapping="Wrap"
+                       Text="Отмены не будет: ни корзины, ни точки восстановления. Журнал запишет, что ушло, но не вернёт"
+                       AutomationProperties.AutomationId="confirm-no-undo"/>
+          </Border>
+
+          <TextBlock FontFamily="{StaticResource TextFont}"
+                     FontSize="{StaticResource FontSizeMeta}"
+                     Foreground="{StaticResource Ink3Brush}"
+                     TextWrapping="Wrap" Margin="0,0,0,8"
+                     Visibility="{Binding Confirmed, Converter={StaticResource VidnoKogdaNet}}"
+                     Text="Прокрути список до конца, чтобы кнопка стала активной"
+                     AutomationProperties.AutomationId="confirm-hint"/>
+
+          <Button Content="Удалить безвозвратно"
+                  Style="{StaticResource DangerButton}"
+                  HorizontalAlignment="Stretch"
+                  Command="{Binding UdalitCommand}"
+                  AutomationProperties.AutomationId="confirm-delete"/>
+        </StackPanel>
+      </Grid>
+    </Grid>
+
+    <!-- ==== Шаг 3 из 4: удаление идёт ==== -->
+    <Grid Visibility="{Binding Step, Converter={StaticResource Shag},
+                       ConverterParameter=Running}"
+          AutomationProperties.AutomationId="files-step-running">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="*"/>
+      </Grid.RowDefinitions>
+
+      <Grid Grid.Row="0" Margin="0,0,0,16">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <StackPanel Grid.Column="0">
+          <c:TrackedText Text="ФАЙЛЫ / ШАГ 3 ИЗ 4"
+                         Tracking="{StaticResource TrackingEyebrow}"
+                         FontFamily="{StaticResource TextFont}"
+                         FontSize="{StaticResource FontSizeEyebrow}"
+                         Foreground="{StaticResource Ink3Brush}"/>
+          <TextBlock FontFamily="{StaticResource DisplayFont}"
+                     FontSize="{StaticResource FontSizeH1}" Margin="0,6,0,0">
+            <Run Text="Освобождено" Foreground="{StaticResource Ink3Brush}"/>
+            <Run Text="{Binding FreedBytes, Converter={StaticResource Razmer}, Mode=OneWay}"
+                 Foreground="{StaticResource InkBrush}" FontWeight="Bold"/>
+          </TextBlock>
+          <TextBlock FontFamily="{StaticResource TextFont}"
+                     FontSize="{StaticResource FontSizeSub}"
+                     Foreground="{StaticResource Ink2Brush}" Margin="0,8,0,0"
+                     AutomationProperties.AutomationId="running-count">
+            <Run Text="{Binding DoneCount, Mode=OneWay}"/>
+            <Run Text="из"/>
+            <Run Text="{Binding SelectedCount, Converter={StaticResource Sklonenie},
+                        ConverterParameter='находки|находок|находок', Mode=OneWay}"/>
+          </TextBlock>
+        </StackPanel>
+
+        <Button Grid.Column="1" Content="Остановить" VerticalAlignment="Center"
+                Command="{Binding OstanovitCommand}"
+                AutomationProperties.AutomationId="running-stop"/>
+      </Grid>
+
+      <StackPanel Grid.Row="1" Margin="0,0,0,16">
+        <!-- Ни Minimum, ни Maximum, ни Height: шкала ноль-единица и
+             толщина заданы стилем на весь продукт. -->
+        <ProgressBar Value="{Binding State.ProgressShare, Mode=OneWay, TargetNullValue=0}"
+                     AutomationProperties.AutomationId="running-progress"/>
+        <TextBlock Text="{Binding State.ProgressPath}"
+                   FontFamily="{StaticResource MonoFont}"
+                   FontSize="{StaticResource FontSizeMono}"
+                   Foreground="{StaticResource Ink4Brush}"
+                   TextTrimming="CharacterEllipsis" Margin="0,10,0,0"/>
+      </StackPanel>
+
+      <Border Grid.Row="2" Background="{StaticResource CardBrush}"
+              BorderBrush="{StaticResource LineBrush}" BorderThickness="1">
+        <ListBox ItemsSource="{Binding Running}"
+                 ItemTemplate="{StaticResource OutcomeRowTemplate}"
+                 AutomationProperties.AutomationId="running-list"/>
+      </Border>
+    </Grid>
+
+    <!-- ==== Шаг 4 из 4: итог ==== -->
+    <Grid Visibility="{Binding Step, Converter={StaticResource Shag},
+                       ConverterParameter=Report}"
+          AutomationProperties.AutomationId="files-step-report">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="*"/>
+      </Grid.RowDefinitions>
+
+      <Grid Grid.Row="0" Margin="0,0,0,16">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <StackPanel Grid.Column="0">
+          <c:TrackedText Text="ФАЙЛЫ / ШАГ 4 ИЗ 4"
+                         Tracking="{StaticResource TrackingEyebrow}"
+                         FontFamily="{StaticResource TextFont}"
+                         FontSize="{StaticResource FontSizeEyebrow}"
+                         Foreground="{StaticResource Ink3Brush}"/>
+          <TextBlock FontFamily="{StaticResource DisplayFont}"
+                     FontSize="{StaticResource FontSizeH1}" Margin="0,6,0,0">
+            <Run Text="Освобождено" Foreground="{StaticResource Ink3Brush}"/>
+            <Run Text="{Binding FreedBytes, Converter={StaticResource Razmer}, Mode=OneWay}"
+                 Foreground="{StaticResource InkBrush}" FontWeight="Bold"/>
+          </TextBlock>
+          <TextBlock Text="{Binding ReportSummary, Mode=OneWay}"
+                     FontFamily="{StaticResource TextFont}"
+                     FontSize="{StaticResource FontSizeSub}"
+                     Foreground="{StaticResource Ink2Brush}" Margin="0,8,0,0"
+                     AutomationProperties.AutomationId="report-summary"/>
+        </StackPanel>
+
+        <Button Grid.Column="1" Content="Готово" VerticalAlignment="Center"
+                Style="{StaticResource PrimaryButton}"
+                Command="{Binding ZavershitCommand}"
+                AutomationProperties.AutomationId="report-done"/>
+      </Grid>
+
+      <!-- Плашка появляется только у прерванного прогона. «Остановлено» и
+           «сделано мало» в сводке выглядят одинаково, и без этой строки
+           человек читает прерванную очистку как законченную. -->
+      <Border Grid.Row="1" Background="{StaticResource RiskDimBrush}"
+              BorderBrush="{StaticResource RiskBrush}" BorderThickness="1"
+              Padding="{StaticResource PadRow}" Margin="0,0,0,16"
+              Visibility="{Binding Report.Cancelled, Converter={StaticResource VidnoKogdaDa}}"
+              AutomationProperties.AutomationId="report-cancelled">
+        <TextBlock FontFamily="{StaticResource TextFont}"
+                   FontSize="{StaticResource FontSizeSub}"
+                   Foreground="{StaticResource InkBrush}"
+                   TextWrapping="Wrap"
+                   Text="Очистка остановлена: пройдено не всё отмеченное. Оставшееся на месте"/>
+      </Border>
+
+      <!--
+        Единственное место, где включаются три выхода из «файл занят». Служба,
+        модель строки и проверки к ним написаны отдельно и без этой разметки не
+        зовутся ниоткуда: разметку стережёт проверка в XamlHygieneTests.
+
+        Шаблон OutcomeRowTemplate тут намеренно НЕ переиспользован. Он общий с
+        журналом, а в журнале кнопка «закрыть программу» была бы предложением
+        закрыть программу ради файла, удалённого неделю назад.
+      -->
+      <Border Grid.Row="2" Background="{StaticResource CardBrush}"
+              BorderBrush="{StaticResource RiskBrush}" BorderThickness="1"
+              Padding="{StaticResource PadRow}" Margin="0,0,0,16"
+              Visibility="{Binding HasStuck, Converter={StaticResource VidnoKogdaDa}}"
+              AutomationProperties.AutomationId="report-stuck">
+        <StackPanel>
+          <TextBlock Text="Занято другими программами"
+                     FontFamily="{StaticResource DisplayFont}"
+                     FontSize="{StaticResource FontSizeSectionTitle}"
+                     Foreground="{StaticResource InkBrush}"/>
+          <TextBlock Text="Эти файлы держали в момент очистки. Продукт попросил держателей закрыться штатно и повторил удаление, ничего искать заново не нужно."
+                     FontFamily="{StaticResource TextFont}"
+                     FontSize="{StaticResource FontSizeSub}"
+                     Foreground="{StaticResource Ink2Brush}"
+                     TextWrapping="Wrap" Margin="0,6,0,0"/>
+
+          <!-- Предупреждение стоит на экране, а не в подсказке: подсказку
+               читают после наведения, а нажимают до. И стоит ОДИН раз на блок,
+               а не на каждой строке: снятый кадр 06.09.2026 показал три
+               одинаковых абзаца подряд, и такой текст перестают читать вовсе.
+               Пропадает вместе с последней кнопкой: когда продукт закрыл всех
+               сам, предупреждать не о чем. -->
+          <TextBlock Text="Принудительное завершение закрывает программу без вопросов, и несохранённое в ней пропадает"
+                     FontFamily="{StaticResource TextFont}"
+                     FontSize="{StaticResource FontSizeMeta}"
+                     Foreground="{StaticResource Ink3Brush}"
+                     TextWrapping="Wrap" Margin="0,4,0,0"
+                     Visibility="{Binding HasStuckActions, Converter={StaticResource VidnoKogdaDa}}"/>
+
+          <!-- Высота ограничена намеренно: занятых файлов бывает не три, а
+               триста, и без потолка блок выдавил бы весь отчёт за край окна.
+               CanContentScroll включает виртуализацию из общего стиля. -->
+          <ScrollViewer MaxHeight="260" Margin="0,12,0,0"
+                        VerticalScrollBarVisibility="Auto" CanContentScroll="True">
+            <ItemsControl ItemsSource="{Binding Stuck}"
+                          AutomationProperties.AutomationId="report-stuck-list">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate DataType="{x:Type vm:ZanyatyyViewModel}">
+                  <!-- Кнопки СПРАВА от строки, а не под ней. Под строкой они
+                       давали пять строк на находку, и три занятых файла
+                       заполняли экран целиком. -->
+                  <Border BorderBrush="{StaticResource LineBrush}"
+                          BorderThickness="{StaticResource HairlineBottom}"
+                          Padding="0,10">
+                    <Grid>
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                      </Grid.ColumnDefinitions>
+
+                      <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                        <TextBlock Text="{Binding Name}"
+                                   FontFamily="{StaticResource TextFont}"
+                                   FontSize="{StaticResource FontSizeRow}"
+                                   Foreground="{StaticResource InkBrush}"
+                                   TextTrimming="CharacterEllipsis"/>
+                        <TextBlock Text="{Binding Path}"
+                                   FontFamily="{StaticResource MonoFont}"
+                                   FontSize="{StaticResource FontSizePath}"
+                                   Foreground="{StaticResource InkPathBrush}"
+                                   TextTrimming="CharacterEllipsis" Margin="0,3,0,0"/>
+
+                        <TextBlock FontFamily="{StaticResource TextFont}"
+                                   FontSize="{StaticResource FontSizeMeta}"
+                                   Foreground="{StaticResource Ink3Brush}"
+                                   TextWrapping="Wrap" Margin="0,4,0,0"
+                                   Visibility="{Binding Holder,
+                                                Converter={StaticResource VidnoKogdaDa}}">
+                          <Run Text="держит"/>
+                          <Run Text="{Binding Holder, Mode=OneWay}"/>
+                        </TextBlock>
+
+                        <!-- Итог последнего нажатия. Отказ и успех приходят
+                             сюда оба: кнопка без ответа выглядит как
+                             сломанная. -->
+                        <TextBlock Text="{Binding Note}"
+                                   FontFamily="{StaticResource TextFont}"
+                                   FontSize="{StaticResource FontSizeMeta}"
+                                   Foreground="{StaticResource Ink2Brush}"
+                                   TextWrapping="Wrap" Margin="0,4,0,0"
+                                   Visibility="{Binding Note,
+                                                Converter={StaticResource VidnoKogdaDa}}"
+                                   AutomationProperties.AutomationId="stuck-note"/>
+
+                        <!-- Ход просьбы виден на строке. Продукт закрывает
+                             ЧУЖУЮ программу человека, и делать это молча
+                             нельзя: закрывшийся сам по себе редактор без
+                             единого слова на экране это не аккуратность, а
+                             необъяснимая пропажа. -->
+                        <TextBlock Text="Просим программу закрыться"
+                                   FontFamily="{StaticResource TextFont}"
+                                   FontSize="{StaticResource FontSizeMeta}"
+                                   Foreground="{StaticResource AccentBrush}"
+                                   Margin="0,4,0,0"
+                                   Visibility="{Binding Idyot,
+                                                Converter={StaticResource VidnoKogdaDa}}"
+                                   AutomationProperties.AutomationId="stuck-progress"/>
+                      </StackPanel>
+
+                      <StackPanel Grid.Column="1" Orientation="Horizontal"
+                                  VerticalAlignment="Center"
+                                  Visibility="{Binding DeystviyaVidny,
+                                               Converter={StaticResource VidnoKogdaDa}}">
+                        <Button Content="Удалить при перезагрузке"
+                                Style="{StaticResource SmallButton}"
+                                Command="{Binding OtlozhitCommand}"
+                                ToolTip="Windows унесёт файл при следующей загрузке. Сейчас он остаётся на месте"
+                                AutomationProperties.AutomationId="stuck-defer"/>
+                        <Button Content="Завершить процесс" Margin="8,0,0,0"
+                                Style="{StaticResource DangerButton}"
+                                Padding="{StaticResource PadButtonSmall}" FontSize="10"
+                                Command="{Binding ZavershitCommand}"
+                                AutomationProperties.AutomationId="stuck-kill"/>
+                      </StackPanel>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+        </StackPanel>
+      </Border>
+
+      <Border Grid.Row="3" Background="{StaticResource CardBrush}"
+              BorderBrush="{StaticResource LineBrush}" BorderThickness="1">
+        <ListBox ItemsSource="{Binding ReportRows}"
+                 ItemTemplate="{StaticResource OutcomeRowTemplate}"
+                 AutomationProperties.AutomationId="report-list"/>
+      </Border>
+    </Grid>
+  </Grid>
+</UserControl>

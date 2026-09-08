@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\JunkManager.Core\JunkManager.Core.csproj" />
+    <ProjectReference Include="..\JunkManager.Safety\JunkManager.Safety.csproj" />
+    <ProjectReference Include="..\JunkManager.Deletion\JunkManager.Deletion.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!--
+      Тот же довод, что и у JunkManager.App: набор тестов кладёт утилиту рядом с
+      собой самодостаточной сборкой под win-x64, потому что в госте нет ни SDK,
+      ни среды выполнения. Без этой строки восстановление не готовит цель под
+      идентификатор среды, и публикация из чужой цели падает с NETSDK1047.
+    -->
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+  </PropertyGroup>
+
+
+  <!-- Old loose catalogs do not vanish because an ItemGroup stopped inviting them. -->
+  <Target Name="UbratStaryePravilaSborki" AfterTargets="Build"
+          Condition="'$(DesignTimeBuild)' != 'true' and '$(TargetDir)' != ''">
+    <Exec Command="powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)..\..\scripts\publish.ps1&quot; -CleanLegacyRules"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          EnvironmentVariables="JUNKMANAGER_LEGACY_OUTPUT=$(TargetDir);JUNKMANAGER_LEGACY_KIND=Cli" />
+  </Target>
+
+  <Target Name="UbratStaryePravilaPublikacii" AfterTargets="Publish"
+          Condition="'$(DesignTimeBuild)' != 'true' and '$(PublishDir)' != ''">
+    <Exec Command="powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)..\..\scripts\publish.ps1&quot; -CleanLegacyRules"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          EnvironmentVariables="JUNKMANAGER_LEGACY_OUTPUT=$(PublishDir);JUNKMANAGER_LEGACY_KIND=Cli" />
+  </Target>
+
+</Project>

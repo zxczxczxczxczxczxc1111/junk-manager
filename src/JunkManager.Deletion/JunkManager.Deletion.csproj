@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\JunkManager.Safety\JunkManager.Safety.csproj" />
+    <!--
+      Ссылка на Core появилась вместе с исполнителем платформенных утилит.
+      Причина: Purge, StartComponentCleanup и delete-driver разрушительны и
+      обязаны жить тут, а сборщики команд и разбор вывода живут в Core.
+      Обратной ссылки не возникает: Core про Deletion по-прежнему не знает, и
+      правило «удаляет только Deletion» от этого крепнет, а не слабеет.
+    -->
+    <ProjectReference Include="..\JunkManager.Core\JunkManager.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      Внутреннее видно набору тестов. Открыто ровно одно: чистая функция
+      RebootDeleteScheduler.Otkaz, которая отвечает «почему откажем» без
+      обращения к системе. Публичной её делать нечестно (параметр elevated
+      снаружи брать неоткуда), а проверить обязательно: под администратором
+      ветку отказа иначе не достать вовсе.
+    -->
+    <InternalsVisibleTo Include="JunkManager.Tests" />
+  </ItemGroup>
+
+</Project>

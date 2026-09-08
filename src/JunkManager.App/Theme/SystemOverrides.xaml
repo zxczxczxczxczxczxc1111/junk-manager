@@ -1,0 +1,79 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!-- ===================================================================
+       This file is the reason a rewritten ControlTemplate is not enough.
+       Default templates resolve system brushes through DynamicResource, so a
+       brush declared here at Application scope wins over the OS value for
+       every control in the process, including the ones nobody remembered.
+       Spec section 15, "Ни одного стандартного контрола Windows".
+       =================================================================== -->
+
+  <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}"
+                   Color="{StaticResource AccentColor}"/>
+  <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}"
+                   Color="{StaticResource AccentInkColor}"/>
+  <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}"
+                   Color="{StaticResource LineMidColor}"/>
+  <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}"
+                   Color="{StaticResource InkColor}"/>
+
+  <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}"
+                   Color="{StaticResource CardColor}"/>
+  <SolidColorBrush x:Key="{x:Static SystemColors.ControlTextBrushKey}"
+                   Color="{StaticResource InkColor}"/>
+  <SolidColorBrush x:Key="{x:Static SystemColors.WindowBrushKey}"
+                   Color="{StaticResource VoidColor}"/>
+  <SolidColorBrush x:Key="{x:Static SystemColors.WindowTextBrushKey}"
+                   Color="{StaticResource InkColor}"/>
+  <SolidColorBrush x:Key="{x:Static SystemColors.GrayTextBrushKey}"
+                   Color="{StaticResource Ink3Color}"/>
+  <SolidColorBrush x:Key="{x:Static SystemColors.HotTrackBrushKey}"
+                   Color="{StaticResource Accent2Color}"/>
+
+  <SolidColorBrush x:Key="{x:Static SystemColors.MenuBrushKey}"
+                   Color="{StaticResource CardColor}"/>
+  <SolidColorBrush x:Key="{x:Static SystemColors.MenuTextBrushKey}"
+                   Color="{StaticResource InkColor}"/>
+  <SolidColorBrush x:Key="{x:Static SystemColors.MenuHighlightBrushKey}"
+                   Color="{StaticResource RaisedColor}"/>
+  <SolidColorBrush x:Key="{x:Static SystemColors.InfoBrushKey}"
+                   Color="{StaticResource CardColor}"/>
+  <SolidColorBrush x:Key="{x:Static SystemColors.InfoTextBrushKey}"
+                   Color="{StaticResource InkColor}"/>
+
+  <!-- Some default templates ask for the Color, not the Brush. Missing this one
+       is how a lilac selection still gets a blue focus rectangle drawn on top. -->
+  <Color x:Key="{x:Static SystemColors.HighlightColorKey}">#FFA88BE0</Color>
+  <!-- Пары InactiveSelectionHighlightColorKey у SystemColors НЕТ. План её
+       называл, разметка с ней собиралась молча и роняла приложение на первом
+       же запуске: x:Static разбирается во время работы, а не при сборке.
+       Неактивное выделение перебито кистью выше, этого достаточно: цвет без
+       кисти ни один шаблон по умолчанию не спрашивает. -->
+
+
+
+  <!-- ==== Focus ring. The WPF default is a dotted rectangle the OS draws.
+       Replacing it globally is done through SystemParameters.FocusVisualStyleKey;
+       every implicit style below also sets FocusVisualStyle by name, so a
+       control cannot fall back to the dotted one even if the global hook moves
+       in a future WPF release. ==== -->
+  <Style x:Key="FocusRingStyle" TargetType="{x:Type Control}">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate>
+          <Rectangle Margin="-2"
+                     Stroke="{StaticResource AccentBrush}"
+                     StrokeThickness="2"
+                     SnapsToDevicePixels="True"
+                     IsHitTestVisible="False"/>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style x:Key="{x:Static SystemParameters.FocusVisualStyleKey}"
+         TargetType="{x:Type Control}"
+         BasedOn="{StaticResource FocusRingStyle}"/>
+
+</ResourceDictionary>

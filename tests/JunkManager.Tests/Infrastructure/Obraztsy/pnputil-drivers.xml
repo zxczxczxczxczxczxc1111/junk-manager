@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PnpUtil Version="10.0.26100" Command="/enum-drivers /devices /format xml">
+    <Driver DriverName="oem29.inf">
+        <OriginalName>alderlakesystem.inf</OriginalName>
+        <ProviderName>INTEL</ProviderName>
+        <ClassName>System</ClassName>
+        <ClassGuid>{4d36e97d-e325-11ce-bfc1-08002be10318}</ClassGuid>
+        <DriverVersion>07/18/1968 10.1.45.4</DriverVersion>
+        <SignerName>Microsoft Windows Hardware Compatibility Publisher</SignerName>
+        <Devices>
+            <Device InstanceId="PCI\VEN_8086&amp;DEV_460D">
+                <DeviceDescription>Intel(R) PEG10 - 460D</DeviceDescription>
+                <Status>Started</Status>
+            </Device>
+        </Devices>
+    </Driver>
+    <Driver DriverName="oem11.inf">
+        <OriginalName>nvhda.inf</OriginalName>
+        <ProviderName>NVIDIA</ProviderName>
+        <ClassName>MEDIA</ClassName>
+        <ClassGuid>{4d36e96c-e325-11ce-bfc1-08002be10318}</ClassGuid>
+        <DriverVersion>12/01/2025 1.4.5.7</DriverVersion>
+        <SignerName>Microsoft Windows Hardware Compatibility Publisher</SignerName>
+        <Devices>
+            <Device InstanceId="PCI\VEN_10DE&amp;DEV_2288">
+                <DeviceDescription>NVIDIA High Definition Audio</DeviceDescription>
+                <Status>Started</Status>
+            </Device>
+        </Devices>
+    </Driver>
+    <Driver DriverName="oem12.inf">
+        <OriginalName>nvhda.inf</OriginalName>
+        <ProviderName>NVIDIA</ProviderName>
+        <ClassName>MEDIA</ClassName>
+        <ClassGuid>{4d36e96c-e325-11ce-bfc1-08002be10318}</ClassGuid>
+        <DriverVersion>10/25/2025 1.4.5.6</DriverVersion>
+        <SignerName>Microsoft Windows Hardware Compatibility Publisher</SignerName>
+        <Devices />
+    </Driver>
+    <Driver DriverName="oem14.inf">
+        <OriginalName>nvhda.inf</OriginalName>
+        <ProviderName>NVIDIA</ProviderName>
+        <ClassName>MEDIA</ClassName>
+        <ClassGuid>{4d36e96c-e325-11ce-bfc1-08002be10318}</ClassGuid>
+        <DriverVersion>09/28/2024 1.4.3.2</DriverVersion>
+        <SignerName>Microsoft Windows Hardware Compatibility Publisher</SignerName>
+    </Driver>
+    <Driver DriverName="oem77.inf">
+        <OriginalName>odinokiy.inf</OriginalName>
+        <ProviderName>Nekto</ProviderName>
+        <ClassName>System</ClassName>
+        <ClassGuid>{4d36e97d-e325-11ce-bfc1-08002be10318}</ClassGuid>
+        <DriverVersion>01/01/2020 1.0.0.0</DriverVersion>
+        <SignerName>Nekto</SignerName>
+        <Devices />
+    </Driver>
+</PnpUtil>

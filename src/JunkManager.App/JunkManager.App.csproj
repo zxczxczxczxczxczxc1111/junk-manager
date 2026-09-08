@@ -1,0 +1,75 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    TargetFramework, Nullable, ImplicitUsings и LangVersion сюда НЕ пишутся:
+    они приезжают из Directory.Build.props, который импортируется до тела
+    проекта, поэтому тело победило бы, и net10.0-windows тихо превратился бы в
+    то, что напишет шаблон.
+  -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <UseWPF>true</UseWPF>
+    <!-- Windows Forms is banned outright: it drags in its own control set with
+         its own system look, which is exactly what this project refuses to ship. -->
+    <UseWindowsForms>false</UseWindowsForms>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>..\..\JunkManager_icon\GarbageManager_purple.ico</ApplicationIcon>
+    <!-- Spec section 2: the launcher is JunkManager.exe, not JunkManager.App.exe. -->
+    <AssemblyName>JunkManager</AssemblyName>
+    <RootNamespace>JunkManager.App</RootNamespace>
+    <!--
+      Выкат идёт под win-x64 самодостаточным, и живые тесты кладут рядом с
+      собой ровно такую сборку. Без этой строки восстановление не готовит цель
+      под идентификатор среды, и публикация из чужой цели падает с NETSDK1047
+      в первый же раз, когда её позовут не из publish.ps1.
+    -->
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\JunkManager.Core\JunkManager.Core.csproj" />
+    <ProjectReference Include="..\JunkManager.Safety\JunkManager.Safety.csproj" />
+    <ProjectReference Include="..\JunkManager.Deletion\JunkManager.Deletion.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      Значок в строке заголовка. Ресурс, а не файл рядом: значок это часть
+      опознания продукта, и он обязан ехать ВНУТРИ exe, иначе окно поднимется
+      без него на любой машине, куда файл не доехал. Берётся тот же готовый
+      файл, что и ApplicationIcon, 20 пикселей под 125 процентов.
+    -->
+    <Resource Include="..\..\JunkManager_icon\purple_20.png" Link="Assets\icon-20.png" />
+    <Resource Include="..\..\JunkManager_icon\purple_512.png" Link="Assets\welcome-logo.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      Внутреннее видно набору тестов. Ui-тесты запускают собранный exe и
+      спрашивают у него решения запуска, которые наружу продукта не API.
+    -->
+    <InternalsVisibleTo Include="JunkManager.Tests" />
+  </ItemGroup>
+
+
+  <!-- Old loose catalogs do not vanish because an ItemGroup stopped inviting them. -->
+  <Target Name="UbratStaryePravilaSborki" AfterTargets="Build"
+          Condition="'$(DesignTimeBuild)' != 'true' and '$(TargetDir)' != ''">
+    <Exec Command="powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)..\..\scripts\publish.ps1&quot; -CleanLegacyRules"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          EnvironmentVariables="JUNKMANAGER_LEGACY_OUTPUT=$(TargetDir);JUNKMANAGER_LEGACY_KIND=App" />
+  </Target>
+
+  <Target Name="UbratStaryePravilaPublikacii" AfterTargets="Publish"
+          Condition="'$(DesignTimeBuild)' != 'true' and '$(PublishDir)' != ''">
+    <Exec Command="powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)..\..\scripts\publish.ps1&quot; -CleanLegacyRules"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          EnvironmentVariables="JUNKMANAGER_LEGACY_OUTPUT=$(PublishDir);JUNKMANAGER_LEGACY_KIND=App" />
+  </Target>
+
+</Project>

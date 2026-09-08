@@ -1,0 +1,129 @@
+{
+  "category": "Разработка",
+  "rules": [
+    {
+      "id": "nuget-http-cache",
+      "name": "Сетевой кэш NuGet",
+      "paths": [
+        "%LOCALAPPDATA%\\NuGet\\v3-cache",
+        "%LOCALAPPDATA%\\NuGet\\plugins-cache"
+      ],
+      "tier": "Safe",
+      "consequence": "Ответы сервера пакетов. Скачаются заново при следующей сборке. Сами пакеты в global-packages не трогаются.",
+      "olderThanDays": 0,
+      "processNames": [
+        "dotnet",
+        "MSBuild",
+        "devenv",
+        "NuGet"
+      ]
+    },
+    {
+      "id": "npm-cache",
+      "name": "Кэш npm",
+      "paths": [
+        "%LOCALAPPDATA%\\npm-cache\\_cacache"
+      ],
+      "tier": "Safe",
+      "consequence": "Скачанные архивы пакетов. Установка после очистки один раз пойдёт из сети.",
+      "olderThanDays": 0,
+      "processNames": [
+        "node"
+      ]
+    },
+    {
+      "id": "yarn-cache",
+      "name": "Кэш Yarn",
+      "paths": [
+        "%LOCALAPPDATA%\\Yarn\\Cache"
+      ],
+      "tier": "Safe",
+      "consequence": "Скачанные архивы пакетов. Установка после очистки один раз пойдёт из сети.",
+      "olderThanDays": 0,
+      "processNames": [
+        "node"
+      ]
+    },
+    {
+      "id": "pip-cache",
+      "name": "Кэш pip",
+      "paths": [
+        "%LOCALAPPDATA%\\pip\\cache"
+      ],
+      "tier": "Safe",
+      "consequence": "Скачанные колёса Python. Установка после очистки один раз пойдёт из сети.",
+      "olderThanDays": 0,
+      "processNames": [
+        "python",
+        "pythonw",
+        "pip"
+      ]
+    },
+    {
+      "id": "vs-component-cache",
+      "name": "Кэш компонентов Visual Studio",
+      "paths": [
+        "%LOCALAPPDATA%\\Microsoft\\VisualStudio\\*\\ComponentModelCache"
+      ],
+      "tier": "Safe",
+      "consequence": "Студия соберёт каталог расширений заново. Первый запуск после очистки будет дольше обычного.",
+      "olderThanDays": 0,
+      "processNames": [
+        "devenv"
+      ]
+    },
+    {
+      "id": "vscode-cache",
+      "name": "Кэш Visual Studio Code",
+      "paths": [
+        "%APPDATA%\\Code\\Cache",
+        "%APPDATA%\\Code\\CachedData",
+        "%APPDATA%\\Code\\GPUCache",
+        "%APPDATA%\\Code\\Code Cache",
+        "%APPDATA%\\Code - Insiders\\Cache",
+        "%APPDATA%\\Code - Insiders\\CachedData",
+        "%APPDATA%\\Code - Insiders\\GPUCache",
+        "%APPDATA%\\Code - Insiders\\Code Cache"
+      ],
+      "tier": "Safe",
+      "consequence": "Редактор пересоберёт кэш при запуске. Настройки, расширения и открытые папки не трогаются.",
+      "olderThanDays": 0,
+      "processNames": [
+        "Code",
+        "Code - Insiders"
+      ]
+    },
+    {
+      "id": "dotnet-sdk-temp",
+      "name": "Временные файлы сборок .NET",
+      "paths": [
+        "%LOCALAPPDATA%\\Temp\\MSBuildTemp*",
+        "%LOCALAPPDATA%\\Microsoft\\VisualStudio\\Packages\\_Instances\\*\\ComponentModelCache"
+      ],
+      "tier": "Safe",
+      "consequence": "Промежуточные файлы сборки. Пересоздаются при следующей сборке.",
+      "olderThanDays": 7,
+      "processNames": [
+        "dotnet",
+        "MSBuild",
+        "devenv"
+      ]
+    },
+    {
+      "id": "pnpm-metadata-cache",
+      "name": "Кэш метаданных pnpm",
+      "paths": [
+        "%LOCALAPPDATA%\\pnpm-cache\\metadata",
+        "%LOCALAPPDATA%\\pnpm-cache\\metadata-v1.3",
+        "%LOCALAPPDATA%\\pnpm-cache\\metadata-full",
+        "%LOCALAPPDATA%\\pnpm-cache\\metadata-full-v1.3"
+      ],
+      "tier": "Safe",
+      "consequence": "Закройте выполняющиеся установки pnpm. Метаданные пакетов загрузятся заново. Store, node_modules, dlx и кэш проекта не выбираются.",
+      "olderThanDays": 0,
+      "processNames": [
+        "node"
+      ]
+    }
+  ]
+}

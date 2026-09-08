@@ -1,0 +1,250 @@
+<UserControl x:Class="JunkManager.App.Views.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:JunkManager.App.Controls"
+             xmlns:conv="clr-namespace:JunkManager.App.Converters"
+             xmlns:vm="clr-namespace:JunkManager.App.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             d:DataContext="{d:DesignInstance Type=vm:SettingsViewModel}"
+             mc:Ignorable="d"
+             x:ClassModifier="internal">
+
+  <UserControl.Resources>
+    <conv:BoolToVisibilityConverter x:Key="VidnoKogdaEst"/>
+  </UserControl.Resources>
+
+  <!-- Своего StateHost здесь нет: он один на продукт и живёт в оболочке. -->
+  <ScrollViewer>
+    <StackPanel>
+      <StackPanel Margin="0,0,0,20">
+        <c:TrackedText Text="НАСТРОЙКИ"
+                       Tracking="{StaticResource TrackingEyebrow}"
+                       FontFamily="{StaticResource TextFont}"
+                       FontSize="{StaticResource FontSizeEyebrow}"
+                       Foreground="{StaticResource Ink3Brush}"/>
+        <TextBlock FontFamily="{StaticResource DisplayFont}"
+                   FontSize="{StaticResource FontSizeH1}" Margin="0,6,0,0"
+                   AutomationProperties.AutomationId="settings-heading">
+          <Run Text="Ничего" Foreground="{StaticResource Ink3Brush}"/>
+          <Run Text="не уходит наружу" Foreground="{StaticResource InkBrush}" FontWeight="Bold"/>
+        </TextBlock>
+        <TextBlock FontFamily="{StaticResource TextFont}"
+                   FontSize="{StaticResource FontSizeSub}"
+                   Foreground="{StaticResource Ink2Brush}"
+                   TextWrapping="Wrap" Margin="0,8,0,0" MaxWidth="720"
+                   HorizontalAlignment="Left"
+                   Text="Сетевых запросов нет вовсе, телеметрии нет. Это требование, а не режим, который можно выключить"/>
+      </StackPanel>
+
+      <Border Background="{StaticResource PanelBrush}"
+              BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+              Margin="0,0,0,14">
+        <StackPanel>
+          <Grid Margin="{StaticResource PadRow}">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Margin="0,0,24,0">
+              <TextBlock Text="Запускать с правами администратора"
+                         FontFamily="{StaticResource TextFont}"
+                         FontSize="{StaticResource FontSizeRow}"
+                         Foreground="{StaticResource InkBrush}"/>
+              <TextBlock FontFamily="{StaticResource TextFont}"
+                         FontSize="{StaticResource FontSizeSub}"
+                         Foreground="{StaticResource Ink2Brush}"
+                         TextWrapping="Wrap" LineHeight="18" Margin="0,4,0,0"
+                         Text="Повышение происходит сразу при запуске, до появления окна, поэтому выбор и результаты сканирования не теряются. Один запрос UAC вместо перезапуска посреди работы"/>
+            </StackPanel>
+            <CheckBox Grid.Column="1" IsChecked="{Binding ElevateOnStart}"
+                      VerticalAlignment="Center"
+                      AutomationProperties.Name="Запускать с правами администратора"
+                      AutomationProperties.AutomationId="settings-elevate"/>
+          </Grid>
+
+          <Grid Margin="{StaticResource PadRow}">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Margin="0,0,24,0">
+              <TextBlock Text="Режим удаления"
+                         FontFamily="{StaticResource TextFont}"
+                         FontSize="{StaticResource FontSizeRow}"
+                         Foreground="{StaticResource InkBrush}"/>
+              <TextBlock FontFamily="{StaticResource TextFont}"
+                         FontSize="{StaticResource FontSizeSub}"
+                         Foreground="{StaticResource Ink2Brush}"
+                         TextWrapping="Wrap" LineHeight="18" Margin="0,4,0,0"
+                         Text="Безвозвратно значит без корзины. Через корзину медленнее, и не всё туда влезает"/>
+            </StackPanel>
+            <ComboBox Grid.Column="1" VerticalAlignment="Center"
+                      ItemsSource="{Binding RezhimVarianty}"
+                      SelectedItem="{Binding Rezhim}"
+                      ItemTemplate="{StaticResource VariantPodpis}"
+                      AutomationProperties.Name="Режим удаления"
+                      AutomationProperties.AutomationId="settings-delete-mode"/>
+          </Grid>
+
+        </StackPanel>
+      </Border>
+
+      <Border Background="{StaticResource PanelBrush}"
+              BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+              Margin="0,0,0,14">
+        <StackPanel>
+          <Grid Margin="{StaticResource PadRow}">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Margin="0,0,24,0">
+              <TextBlock Text="Дополнительные кэши приложений"
+                         FontFamily="{StaticResource TextFont}"
+                         FontSize="{StaticResource FontSizeRow}"
+                         Foreground="{StaticResource InkBrush}"/>
+              <TextBlock FontFamily="{StaticResource TextFont}"
+                         FontSize="{StaticResource FontSizeSub}"
+                         Foreground="{StaticResource Ink2Brush}"
+                         TextWrapping="Wrap" LineHeight="18" Margin="0,4,0,0"
+                         Text="Дополнительная проверка кэшей установленных приложений. Личные данные и папки неизвестного назначения сохраняются"/>
+            </StackPanel>
+            <CheckBox Grid.Column="1" IsChecked="{Binding DetectorsEnabled}"
+                      VerticalAlignment="Center"
+                      AutomationProperties.Name="Дополнительные кэши приложений"
+                      AutomationProperties.AutomationId="settings-detectors"/>
+          </Grid>
+
+          <Grid Margin="{StaticResource PadRow}">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Margin="0,0,24,0">
+              <TextBlock Text="Искать следы после удаления программ"
+                         FontFamily="{StaticResource TextFont}"
+                         FontSize="{StaticResource FontSizeRow}"
+                         Foreground="{StaticResource InkBrush}"/>
+              <TextBlock FontFamily="{StaticResource TextFont}"
+                         FontSize="{StaticResource FontSizeSub}"
+                         Foreground="{StaticResource Ink2Brush}"
+                         TextWrapping="Wrap" LineHeight="18" Margin="0,4,0,0"
+                         Text="После подтверждённого удаления показать оставшиеся файлы и записи реестра. Очистка выполняется отдельно по вашему выбору; совпадения только по имени удалить нельзя"/>
+            </StackPanel>
+            <CheckBox Grid.Column="1" IsChecked="{Binding LeftoverSearch}"
+                      VerticalAlignment="Center"
+                      AutomationProperties.Name="Искать следы после удаления программ"
+                      AutomationProperties.AutomationId="settings-leftovers"/>
+          </Grid>
+
+          <Grid Margin="{StaticResource PadRow}">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Margin="0,0,24,0">
+              <TextBlock Text="Глубокая проверка" FontSize="{StaticResource FontSizeRow}"/>
+              <TextBlock Text="Дополнительно искать старые временные файлы и дампы сбоев. Проверка занимает больше времени, а находки требуют просмотра и ручного выбора"
+                         FontSize="{StaticResource FontSizeSub}" Foreground="{StaticResource Ink2Brush}"
+                         TextWrapping="Wrap" LineHeight="18" Margin="0,4,0,0"/>
+            </StackPanel>
+            <CheckBox Grid.Column="1" IsChecked="{Binding DeepScan}" VerticalAlignment="Center"
+                      AutomationProperties.Name="Глубокая проверка"
+                      AutomationProperties.AutomationId="settings-deep-scan"/>
+          </Grid>
+
+          <Grid Margin="{StaticResource PadRow}">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Margin="0,0,24,0">
+              <TextBlock Text="Хранить журнал"
+                         FontFamily="{StaticResource TextFont}"
+                         FontSize="{StaticResource FontSizeRow}"
+                         Foreground="{StaticResource InkBrush}"/>
+              <TextBlock FontFamily="{StaticResource TextFont}"
+                         FontSize="{StaticResource FontSizeSub}"
+                         Foreground="{StaticResource Ink2Brush}"
+                         TextWrapping="Wrap" LineHeight="18" Margin="0,4,0,0"
+                         Text="Записи старше срока убираются при запуске. Занятый файл остаётся до следующего раза"/>
+            </StackPanel>
+            <ComboBox Grid.Column="1" VerticalAlignment="Center"
+                      ItemsSource="{Binding HranenieVarianty}"
+                      SelectedItem="{Binding Hranenie}"
+                      ItemTemplate="{StaticResource VariantPodpis}"
+                      AutomationProperties.Name="Хранить журнал"
+                      AutomationProperties.AutomationId="settings-retention"/>
+          </Grid>
+        </StackPanel>
+      </Border>
+
+      <Border Background="{StaticResource PanelBrush}"
+              BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+              Margin="0,0,0,14">
+        <!-- A backup checkbox should actually save its choice. Revolutionary, apparently. -->
+        <Grid Margin="{StaticResource PadRow}">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+          </Grid.ColumnDefinitions>
+          <StackPanel Grid.Column="0" Margin="0,0,24,0">
+            <TextBlock Text="Экспорт записей реестра перед удалением"
+                       FontFamily="{StaticResource TextFont}"
+                       FontSize="{StaticResource FontSizeRow}"
+                       Foreground="{StaticResource InkBrush}"/>
+            <TextBlock FontFamily="{StaticResource TextFont}"
+                       FontSize="{StaticResource FontSizeSub}"
+                       Foreground="{StaticResource Ink2Brush}"
+                       TextWrapping="Wrap" LineHeight="18" Margin="0,4,0,0"
+                       Text="Необязателен. Сохраняет только удаляемые записи реестра для их восстановления, без копирования программ и кэшей. Без экспорта удаление работает, но вернуть записи через журнал нельзя. Выбор сохраняется сразу"/>
+          </StackPanel>
+          <CheckBox Grid.Column="1" IsChecked="{Binding BackupRegistryBeforeCleanup}"
+                    VerticalAlignment="Center"
+                    AutomationProperties.Name="Экспорт записей реестра перед удалением"
+                    AutomationProperties.AutomationId="settings-registry-backup"/>
+        </Grid>
+      </Border>
+
+      <Border Background="{StaticResource PanelBrush}"
+              BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+              Margin="0,0,0,18">
+        <Grid Margin="{StaticResource PadRow}">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+          </Grid.ColumnDefinitions>
+          <StackPanel Grid.Column="0" Margin="0,0,24,0">
+            <TextBlock Text="Точка восстановления перед очисткой реестра"
+                       FontFamily="{StaticResource TextFont}"
+                       FontSize="{StaticResource FontSizeRow}"
+                       Foreground="{StaticResource InkBrush}"/>
+            <TextBlock FontFamily="{StaticResource TextFont}"
+                       FontSize="{StaticResource FontSizeSub}"
+                       Foreground="{StaticResource Ink2Brush}"
+                       TextWrapping="Wrap" LineHeight="18" Margin="0,4,0,0"
+                       Text="Необязательна и создаётся один раз за сеанс. Требует прав администратора и включённой защиты системы. Не сохраняет удалённые программы и не заменяет экспорт отдельных записей реестра. Выбор сохраняется сразу"/>
+          </StackPanel>
+          <CheckBox Grid.Column="1" IsChecked="{Binding RestorePointBeforeRegistry}"
+                    IsEnabled="{Binding Elevated}"
+                    VerticalAlignment="Center"
+                    AutomationProperties.Name="Точка восстановления перед очисткой реестра"
+                    AutomationProperties.AutomationId="settings-restore-point"/>
+        </Grid>
+      </Border>
+
+      <StackPanel Orientation="Horizontal">
+        <Button Content="Сохранить" Style="{StaticResource PrimaryButton}"
+                Command="{Binding SohranitCommand}"
+                AutomationProperties.AutomationId="settings-save"/>
+        <TextBlock Text="Записано" VerticalAlignment="Center" Margin="14,0,0,0"
+                   FontFamily="{StaticResource TextFont}"
+                   FontSize="{StaticResource FontSizeSub}"
+                   Foreground="{StaticResource OkBrush}"
+                   Visibility="{Binding Sohraneno, Converter={StaticResource VidnoKogdaEst}}"
+                   AutomationProperties.AutomationId="settings-saved"/>
+      </StackPanel>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

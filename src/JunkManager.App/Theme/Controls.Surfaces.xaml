@@ -1,0 +1,416 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:c="clr-namespace:JunkManager.App.Controls"
+                    xmlns:conv="clr-namespace:JunkManager.App.Converters">
+
+  <!-- Доля в пиксели. Живёт здесь, а не в ресурсах экрана: тонкую полосу доли
+       рисуют и обзор, и список файлов, а два экземпляра одного преобразователя
+       это два места, где потом поправят только одно. -->
+  <conv:ShareToWidthConverter x:Key="DolyaVShirinu"/>
+
+  <!-- ==== ProgressBar. The stock one runs its own shimmer across the track,
+       and that shimmer is the Windows look walking straight through a custom
+       template unless the template replaces the whole thing. ==== -->
+  <Style TargetType="{x:Type ProgressBar}">
+    <Setter Property="OverridesDefaultStyle" Value="True"/>
+    <Setter Property="SnapsToDevicePixels" Value="True"/>
+    <Setter Property="Height" Value="4"/>
+    <Setter Property="Focusable" Value="False"/>
+    <!-- The scale is a share from zero to one across the whole product, and it
+         is pinned here rather than at each call site. ScaleX below is Value
+         itself, so a bar left on the stock 0..100 range would draw a hundredfold
+         overshoot and look completely full at one percent. -->
+    <Setter Property="Minimum" Value="0"/>
+    <Setter Property="Maximum" Value="1"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type ProgressBar}">
+          <Border Background="{StaticResource SunkenBrush}"
+                  BorderBrush="{StaticResource LineBrush}"
+                  BorderThickness="1">
+            <Grid x:Name="Track" ClipToBounds="True">
+              <!-- Ширина заливки считается из доли и ширины дорожки тем же
+                   преобразователем, что и полосы на обзоре. Раньше здесь
+                   стоял ScaleTransform, привязанный к Value: рисовал он верно,
+                   но при каждом построении шаблона писал в трассировку
+                   «Cannot find governing FrameworkElement», потому что
+                   Freezable в шаблоне получает контекст наследования позже,
+                   чем к нему привязываются. Ошибка безвредная и вечная, а
+                   ловушка привязок обязана оставаться строгой: одна
+                   постоянная жалоба прячет за собой все настоящие.
+                   Найдено 06.09.2026. -->
+              <Rectangle x:Name="Determinate"
+                         Fill="{StaticResource AccentBrush}"
+                         HorizontalAlignment="Left">
+                <Rectangle.Width>
+                  <MultiBinding Converter="{StaticResource DolyaVShirinu}" Mode="OneWay">
+                    <Binding Path="Value" RelativeSource="{RelativeSource TemplatedParent}"/>
+                    <Binding Path="ActualWidth" ElementName="Track"/>
+                  </MultiBinding>
+                </Rectangle.Width>
+              </Rectangle>
+
+              <!-- Indeterminate: one short block sliding, not a shimmer over the
+                   whole bar. A moving highlight across a full track reads as
+                   "almost done" when nothing is known about the total. -->
+              <Rectangle x:Name="Indeterminate"
+                         Fill="{StaticResource AccentBrush}"
+                         Width="90" HorizontalAlignment="Left"
+                         Visibility="Collapsed">
+                <Rectangle.RenderTransform>
+                  <TranslateTransform x:Name="Slide" X="0"/>
+                </Rectangle.RenderTransform>
+              </Rectangle>
+            </Grid>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsIndeterminate" Value="True">
+              <Setter TargetName="Determinate" Property="Visibility" Value="Collapsed"/>
+              <Setter TargetName="Indeterminate" Property="Visibility" Value="Visible"/>
+            </Trigger>
+            <MultiDataTrigger>
+              <MultiDataTrigger.Conditions>
+                <Condition Binding="{Binding IsIndeterminate, RelativeSource={RelativeSource Self}}" Value="True"/>
+                <Condition Binding="{Binding IsVisible, RelativeSource={RelativeSource Self}}" Value="True"/>
+                <Condition Binding="{Binding Source={StaticResource MotionEnabled}}" Value="True"/>
+              </MultiDataTrigger.Conditions>
+              <MultiDataTrigger.EnterActions>
+                <BeginStoryboard Name="Begut">
+                  <!-- A changing operation label still works when motion gets sent home. -->
+                  <Storyboard RepeatBehavior="Forever">
+                    <DoubleAnimation Storyboard.TargetName="Slide"
+                                     Storyboard.TargetProperty="X"
+                                     From="-90" To="900" Duration="0:0:1.4"/>
+                  </Storyboard>
+                </BeginStoryboard>
+              </MultiDataTrigger.EnterActions>
+              <MultiDataTrigger.ExitActions>
+                <StopStoryboard BeginStoryboardName="Begut"/>
+              </MultiDataTrigger.ExitActions>
+            </MultiDataTrigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- ==== ToolTip. The stock one brings its own border, its own drop shadow and
+       its own popup timers. All three are the system look. ==== -->
+  <Style TargetType="{x:Type ToolTip}">
+    <Setter Property="OverridesDefaultStyle" Value="True"/>
+    <Setter Property="SnapsToDevicePixels" Value="True"/>
+    <Setter Property="HasDropShadow" Value="False"/>
+    <Setter Property="Placement" Value="Bottom"/>
+    <Setter Property="VerticalOffset" Value="6"/>
+    <Setter Property="MaxWidth" Value="320"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type ToolTip}">
+          <Border Background="{StaticResource RaisedBrush}"
+                  BorderBrush="{StaticResource LineHiBrush}"
+                  BorderThickness="1"
+                  Padding="10,7">
+            <ContentPresenter TextBlock.FontFamily="{StaticResource TextFont}"
+                              TextBlock.FontSize="{StaticResource FontSizeMeta}"
+                              TextBlock.Foreground="{StaticResource Ink2Brush}"/>
+          </Border>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- ==== ContextMenu and MenuItem. Only ever used by text fields: nothing in
+       this product hides an action behind a right click. ==== -->
+  <Style TargetType="{x:Type ContextMenu}">
+    <Setter Property="OverridesDefaultStyle" Value="True"/>
+    <Setter Property="SnapsToDevicePixels" Value="True"/>
+    <Setter Property="HasDropShadow" Value="False"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type ContextMenu}">
+          <Border Background="{StaticResource CardBrush}"
+                  BorderBrush="{StaticResource LineHiBrush}"
+                  BorderThickness="1"
+                  Padding="0,4">
+            <ItemsPresenter/>
+          </Border>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style TargetType="{x:Type MenuItem}">
+    <Setter Property="OverridesDefaultStyle" Value="True"/>
+    <Setter Property="SnapsToDevicePixels" Value="True"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type MenuItem}">
+          <Border x:Name="Row" Background="Transparent" Padding="14,7">
+            <ContentPresenter ContentSource="Header"
+                              RecognizesAccessKey="False"
+                              TextBlock.FontFamily="{StaticResource TextFont}"
+                              TextBlock.FontSize="{StaticResource FontSizeSub}"
+                              TextBlock.Foreground="{StaticResource Ink2Brush}"/>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsHighlighted" Value="True">
+              <Setter TargetName="Row" Property="Background" Value="{StaticResource RaisedBrush}"/>
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter TargetName="Row" Property="Opacity" Value="0.35"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- The menu task 5 asked for by name. Commands are the built-in editing ones,
+       so no code-behind and no view model is involved. -->
+  <ContextMenu x:Key="EditContextMenu">
+    <MenuItem Header="Вырезать" Command="Cut"
+              AutomationProperties.AutomationId="edit-cut"/>
+    <MenuItem Header="Копировать" Command="Copy"
+              AutomationProperties.AutomationId="edit-copy"/>
+    <MenuItem Header="Вставить" Command="Paste"
+              AutomationProperties.AutomationId="edit-paste"/>
+    <MenuItem Header="Выделить всё" Command="SelectAll"
+              AutomationProperties.AutomationId="edit-select-all"/>
+  </ContextMenu>
+
+  <!-- ==== Rail item. A plain Button and not a ListBoxItem: the rail is six
+       fixed buttons, and pulling ListBox in for six items would drag selection,
+       keyboard cycling and the item container generator along with it.
+
+       And not a ToggleButton either, which is where this started. Проверено
+       запуском 05.09.2026: у ToggleButton есть СВОЯ отметка IsChecked, и она
+       переключается в обход модели. Средство автоматизации дёрнуло Toggle,
+       привязка IsChecked к IsCurrent перестала действовать, и раздел остался
+       помеченным навсегда: на экране два активных пункта сразу. Отметка обязана
+       приходить ТОЛЬКО из данных, поэтому здесь DataTrigger по IsCurrent, а
+       собственного состояния у кнопки нет вовсе. ==== -->
+  <Style x:Key="RailItemStyle" TargetType="{x:Type Button}">
+    <Setter Property="OverridesDefaultStyle" Value="True"/>
+    <Setter Property="SnapsToDevicePixels" Value="True"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRingStyle}"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type Button}">
+          <Grid x:Name="Row" Background="Transparent">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="2"/>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- The active marker is a 2 px lilac bar, not an underline. The
+                 underline ban is a project rule, and this is the place it would
+                 be broken first. -->
+            <Rectangle x:Name="Marker" Grid.Column="0"
+                       Fill="{StaticResource AccentBrush}" Opacity="0"/>
+
+            <!-- TrackedText and not TextBlock: the rail in the approved mockup is
+                 uppercase display type with letter spacing, and TextBlock has no
+                 letter spacing at all. -->
+            <c:TrackedText x:Name="Label" Grid.Column="1"
+                           Text="{Binding RailLabel}"
+                           Tracking="{StaticResource TrackingRail}"
+                           FontFamily="{StaticResource DisplayFont}"
+                           FontSize="{StaticResource FontSizeMeta}"
+                           Foreground="{StaticResource Ink2Brush}"
+                           VerticalAlignment="Center"
+                           Margin="16,11,10,11"/>
+
+            <Border x:Name="Badge" Grid.Column="2"
+                    Background="{StaticResource RaisedBrush}"
+                    Padding="6,2" Margin="0,0,14,0"
+                    VerticalAlignment="Center"
+                    Visibility="Collapsed">
+              <TextBlock Text="{Binding Badge}"
+                         FontFamily="{StaticResource MonoFont}"
+                         FontSize="{StaticResource FontSizeChip}"
+                         Foreground="{StaticResource Ink3Brush}"/>
+            </Border>
+          </Grid>
+          <ControlTemplate.Triggers>
+            <!-- Only HasBadge decides. A counted zero is shown; "not counted yet"
+                 is not, and the view model is the single place that tells them
+                 apart. -->
+            <DataTrigger Binding="{Binding HasBadge}" Value="True">
+              <Setter TargetName="Badge" Property="Visibility" Value="Visible"/>
+            </DataTrigger>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Row" Property="Background" Value="{StaticResource CardBrush}"/>
+              <Setter TargetName="Label" Property="Foreground" Value="{StaticResource InkBrush}"/>
+            </Trigger>
+            <DataTrigger Binding="{Binding IsCurrent}" Value="True">
+              <Setter TargetName="Row" Property="Background" Value="{StaticResource CardBrush}"/>
+              <Setter TargetName="Label" Property="Foreground" Value="{StaticResource InkBrush}"/>
+              <Setter TargetName="Marker" Property="Opacity" Value="1"/>
+            </DataTrigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- ==== RiskChip. Медь живёт здесь и в тонких полосах доли, и больше нигде.
+       Никогда не кнопка и никогда не фон. ==== -->
+  <Style TargetType="{x:Type c:RiskChip}">
+    <Setter Property="Focusable" Value="False"/>
+    <Setter Property="SnapsToDevicePixels" Value="True"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type c:RiskChip}">
+          <Border x:Name="Frame"
+                  Background="{StaticResource RiskDimBrush}"
+                  BorderBrush="{StaticResource SafeFillBrush}"
+                  BorderThickness="1"
+                  Padding="6,2">
+            <StackPanel Orientation="Horizontal">
+              <!-- Безопасно: пустой контур. Опасно: тот же контур с
+                   восклицанием внутри. Одна форма плюс добавка, а не две разные
+                   иконки: разницу между «есть добавка» и «нет добавки» видно
+                   быстрее, чем разницу между двумя рисунками. -->
+              <Path x:Name="Glyph"
+                    Data="M 2.6,2.6 H 13.4 V 13.4 H 2.6 Z"
+                    Stroke="{StaticResource SafeInkBrush}" StrokeThickness="1.5"
+                    Fill="Transparent" Stretch="None"
+                    VerticalAlignment="Center" Margin="0,0,5,0"/>
+              <TextBlock x:Name="Word" Text="Безопасно"
+                         FontFamily="{StaticResource TextFont}"
+                         FontSize="{StaticResource FontSizeChip}"
+                         Foreground="{StaticResource SafeInkBrush}"
+                         VerticalAlignment="Center"/>
+            </StackPanel>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="Tier" Value="Risk">
+              <Setter TargetName="Frame" Property="BorderBrush" Value="{StaticResource RiskBrush}"/>
+              <Setter TargetName="Glyph" Property="Data"
+                      Value="M 2.6,2.6 H 13.4 V 13.4 H 2.6 Z M 8,5 V 8.9 M 8,11.2 V 11.3"/>
+              <Setter TargetName="Glyph" Property="Stroke" Value="{StaticResource RiskBrush}"/>
+              <Setter TargetName="Word" Property="Text" Value="Опасно"/>
+              <Setter TargetName="Word" Property="Foreground" Value="{StaticResource RiskBrush}"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- ==== Строка категории. Кнопка во всю ширину, без скруглений. Активная
+       помечается фоном и лиловой полосой слева, ровно как раздел в рельсе:
+       одна отметка «вы здесь» на весь продукт, а не две разные.
+
+       Отметка приходит из IsCurrent, то есть из данных. Собственного состояния
+       у кнопки нет по той же причине, что и у пункта рельсы: своя отметка
+       переключается в обход модели, и на экране остаются две активные строки
+       сразу. ==== -->
+  <Style x:Key="CategoryRowButton" TargetType="{x:Type Button}">
+    <Setter Property="OverridesDefaultStyle" Value="True"/>
+    <Setter Property="SnapsToDevicePixels" Value="True"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+    <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRingStyle}"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type Button}">
+          <Grid x:Name="Row" Background="Transparent">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="2"/>
+              <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Rectangle x:Name="Marker" Grid.Column="0"
+                       Fill="{StaticResource AccentBrush}" Opacity="0"/>
+
+            <Border Grid.Column="1"
+                    BorderBrush="{StaticResource LineBrush}"
+                    BorderThickness="{StaticResource HairlineBottom}"
+                    Padding="{StaticResource PadCell}">
+              <ContentPresenter/>
+            </Border>
+          </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Row" Property="Background" Value="{StaticResource CardBrush}"/>
+            </Trigger>
+            <DataTrigger Binding="{Binding IsCurrent}" Value="True">
+              <Setter TargetName="Row" Property="Background" Value="{StaticResource CardBrush}"/>
+              <Setter TargetName="Marker" Property="Opacity" Value="1"/>
+            </DataTrigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- ==== StateHost. Implicit, so a screen that forgets to style it still
+       gets the four states. ==== -->
+  <Style TargetType="{x:Type c:StateHost}">
+    <Setter Property="EmptyTemplate" Value="{StaticResource EmptyStateTemplate}"/>
+    <Setter Property="LoadingTemplate" Value="{StaticResource LoadingStateTemplate}"/>
+    <Setter Property="ErrorTemplate" Value="{StaticResource ErrorStateTemplate}"/>
+    <Setter Property="RestrictionTemplate" Value="{StaticResource RestrictionNoteTemplate}"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type c:StateHost}">
+          <Grid>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- The note sits above the body and outside the phase switch: it is
+                 shown together with content, never instead of it. -->
+            <ContentPresenter x:Name="Restriction" Grid.Row="0"
+                              Content="{TemplateBinding State}"
+                              ContentTemplate="{TemplateBinding RestrictionTemplate}"
+                              Visibility="Collapsed"
+                              Margin="0,0,0,16"/>
+
+            <Grid Grid.Row="1">
+              <ContentPresenter x:Name="Ready"
+                                Content="{TemplateBinding Content}"/>
+              <ContentPresenter x:Name="Loading"
+                                Content="{TemplateBinding State}"
+                                ContentTemplate="{TemplateBinding LoadingTemplate}"
+                                Visibility="Collapsed"/>
+              <ContentPresenter x:Name="Empty"
+                                Content="{TemplateBinding State}"
+                                ContentTemplate="{TemplateBinding EmptyTemplate}"
+                                Visibility="Collapsed"/>
+              <ContentPresenter x:Name="Error"
+                                Content="{TemplateBinding State}"
+                                ContentTemplate="{TemplateBinding ErrorTemplate}"
+                                Visibility="Collapsed"/>
+            </Grid>
+          </Grid>
+          <ControlTemplate.Triggers>
+            <Trigger Property="HasRestriction" Value="True">
+              <Setter TargetName="Restriction" Property="Visibility" Value="Visible"/>
+            </Trigger>
+            <Trigger Property="Phase" Value="Loading">
+              <Setter TargetName="Ready" Property="Visibility" Value="Collapsed"/>
+              <Setter TargetName="Loading" Property="Visibility" Value="Visible"/>
+            </Trigger>
+            <Trigger Property="Phase" Value="Empty">
+              <Setter TargetName="Ready" Property="Visibility" Value="Collapsed"/>
+              <Setter TargetName="Empty" Property="Visibility" Value="Visible"/>
+            </Trigger>
+            <Trigger Property="Phase" Value="Error">
+              <Setter TargetName="Ready" Property="Visibility" Value="Collapsed"/>
+              <Setter TargetName="Error" Property="Visibility" Value="Visible"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+</ResourceDictionary>

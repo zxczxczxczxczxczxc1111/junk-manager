@@ -1,0 +1,34 @@
+bin/
+obj/
+artifacts/
+*.user
+.vs/
+
+# Local assistants and development notes stay outside the public source tree.
+.claude/
+.codex/
+.agents/
+.autopilot/
+AGENTS.md
+CLAUDE.md
+CODEX.md
+docs/PAMYAT.md
+docs/VERIFICATION-*.md
+docs/superpowers/
+docs/issledovanie/
+docs/posev-priyomka.txt
+design/
+
+# This workstation's Hyper-V provisioning is local infrastructure.
+scripts/vm-*.ps1
+scripts/snimok-okna.ps1
+scripts/.mutate-vosstanovlenie/
+polygon/autounattend.xml
+
+# Credentials never belong in a release archive.
+.env
+.env.*
+!.env.example
+*.pfx
+*.p12
+*.key

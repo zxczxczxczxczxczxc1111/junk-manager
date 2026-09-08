@@ -1,0 +1,475 @@
+<UserControl x:Class="JunkManager.App.Views.RegistryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:b="clr-namespace:JunkManager.App.Controls.Behaviors"
+             xmlns:c="clr-namespace:JunkManager.App.Controls"
+             xmlns:conv="clr-namespace:JunkManager.App.Converters"
+             xmlns:svc="clr-namespace:JunkManager.App.Services"
+             xmlns:vm="clr-namespace:JunkManager.App.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             d:DataContext="{d:DesignInstance Type=vm:RegistryViewModel}"
+             mc:Ignorable="d"
+             x:ClassModifier="internal">
+
+  <UserControl.Resources>
+    <conv:EnumEqualsConverter x:Key="Shag"/>
+    <conv:ByteSizeConverter x:Key="Razmer"/>
+    <conv:BoolToVisibilityConverter x:Key="VidnoKogdaDa"/>
+    <conv:BoolToVisibilityConverter x:Key="VidnoKogdaNet" Invert="True"/>
+  </UserControl.Resources>
+
+  <!-- Своего StateHost здесь нет: он один на продукт и живёт в оболочке.
+       Экран отдаёт своё состояние наружу через IScreenViewModel.State.
+
+       Четыре шага одного потока лежат друг на друге, как на экране «Файлы»:
+       отдельных разделов у шагов нет намеренно, пункт меню на подтверждении
+       оставлял бы человека там, где он выбирал записи. -->
+  <Grid>
+
+    <!-- ==== Шаг 1 из 4: выбор ==== -->
+    <Grid Visibility="{Binding Step, Converter={StaticResource Shag},
+                       ConverterParameter=Selection}"
+          AutomationProperties.AutomationId="registry-step-selection">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
+
+    <Grid Grid.Row="0" Margin="0,0,0,16">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="Auto"/>
+      </Grid.ColumnDefinitions>
+
+      <StackPanel Grid.Column="0">
+        <c:TrackedText Text="РЕЕСТР"
+                       Tracking="{StaticResource TrackingEyebrow}"
+                       FontFamily="{StaticResource TextFont}"
+                       FontSize="{StaticResource FontSizeEyebrow}"
+                       Foreground="{StaticResource Ink3Brush}"/>
+        <TextBlock FontFamily="{StaticResource DisplayFont}"
+                   FontSize="{StaticResource FontSizeH1}" Margin="0,6,0,0"
+                   AutomationProperties.AutomationId="registry-heading">
+          <Run Text="Найдено записей:" Foreground="{StaticResource Ink3Brush}"/>
+          <Run Text="{Binding Rows.Count, Mode=OneWay}"
+               Foreground="{StaticResource InkBrush}" FontWeight="Bold"/>
+        </TextBlock>
+      </StackPanel>
+
+      <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+        <TextBlock Text="{Binding SelectedLabel}" VerticalAlignment="Center"
+                   Margin="0,0,14,0"
+                   FontFamily="{StaticResource TextFont}"
+                   FontSize="{StaticResource FontSizeSub}"
+                   Foreground="{StaticResource Ink2Brush}"
+                   AutomationProperties.AutomationId="registry-selected-count"/>
+        <Button Content="Из бэкапа" Margin="0,0,8,0"
+                Command="{Binding OtkryitBekapyCommand}"
+                AutomationProperties.AutomationId="registry-backups"/>
+        <Button Content="Проверить" Margin="0,0,8,0"
+                Command="{Binding ProveritCommand}"
+                AutomationProperties.AutomationId="registry-scan"/>
+        <Button Content="Удалить выбранные" Style="{StaticResource PrimaryButton}"
+                Command="{Binding KPodtverzhdeniyuCommand}"
+                AutomationProperties.AutomationId="registry-delete"/>
+      </StackPanel>
+    </Grid>
+
+    <!-- Стоит всегда и на всех состояниях. Это не подсказка, а поправка к
+         ожиданиям: люди приходят на этот экран за освобождённым местом,
+         а его здесь нет. -->
+    <Border Grid.Row="1" Background="{StaticResource AccentFill2Brush}"
+            BorderBrush="{StaticResource AccentLineBrush}" BorderThickness="1"
+            Padding="14,11" Margin="0,0,0,16">
+      <StackPanel>
+      <TextBlock FontFamily="{StaticResource TextFont}"
+                 FontSize="{StaticResource FontSizeSub}"
+                 Foreground="{StaticResource Ink2Brush}"
+                 TextWrapping="Wrap" LineHeight="18"
+                 AutomationProperties.AutomationId="registry-banner">
+        <Run Text="Чистка реестра не освобождает место и не ускоряет систему."
+             FontWeight="SemiBold" Foreground="{StaticResource InkBrush}"/>
+        <Run Text="Польза ровно в трёх вещах: убрать автозапуск несуществующих программ, убрать расширения оболочки с отсутствующими DLL и убрать ссылки на исчезнувшие файлы. Удаляется только то, что ссылается на отсутствующий на диске файл"/>
+      </TextBlock>
+      <TextBlock Text="{Binding CoverageSummary}" TextWrapping="Wrap" Margin="0,6,0,0"
+                 FontFamily="{StaticResource TextFont}" FontSize="{StaticResource FontSizeMeta}"
+                 Foreground="{StaticResource Ink3Brush}"/>
+      </StackPanel>
+    </Border>
+
+    <Border Grid.Row="2" Background="{StaticResource CardBrush}"
+            BorderBrush="{StaticResource LineBrush}" BorderThickness="1">
+      <ListBox ItemsSource="{Binding Rows}"
+               VirtualizingPanel.ScrollUnit="Pixel"
+               AutomationProperties.AutomationId="registry-list">
+        <ListBox.ItemTemplate>
+          <DataTemplate DataType="{x:Type vm:RegistryFindingViewModel}">
+            <Grid Margin="{StaticResource PadRow}">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+              </Grid.ColumnDefinitions>
+
+              <!-- Флажок выключен у записей ветки машины без прав администратора.
+                   Не спрятан: находку нашли честно, и прятать её значит сказать
+                   «не найдено» там, где найдено. -->
+              <CheckBox Grid.Column="0" VerticalAlignment="Top" Margin="0,2,12,0"
+                        IsChecked="{Binding IsSelected}"
+                        IsEnabled="{Binding CanSelect}"
+                        AutomationProperties.Name="{Binding KeyPath}"
+                        AutomationProperties.AutomationId="registry-row-check"/>
+
+              <StackPanel Grid.Column="1" Margin="0,0,16,0">
+                <TextBlock Text="{Binding Category}"
+                           FontFamily="{StaticResource TextFont}"
+                           FontSize="{StaticResource FontSizeChip}"
+                           Foreground="{StaticResource Ink3Brush}"/>
+                <TextBlock FontFamily="{StaticResource MonoFont}"
+                           FontSize="{StaticResource FontSizeMono}"
+                           Foreground="{StaticResource InkBrush}"
+                           TextTrimming="CharacterEllipsis" Margin="0,4,0,0">
+                  <Run Text="{Binding KeyPath, Mode=OneWay}"/>
+                  <Run Text="\" Foreground="{StaticResource Ink4Brush}"/>
+                  <Run Text="{Binding ValueName, Mode=OneWay}"/>
+                </TextBlock>
+                <TextBlock FontFamily="{StaticResource TextFont}"
+                           FontSize="{StaticResource FontSizeMeta}"
+                           Foreground="{StaticResource Ink2Brush}"
+                           TextWrapping="Wrap" Margin="0,5,0,0">
+                  <Run Text="Ссылается на отсутствующий файл"/>
+                  <Run Text="{Binding MissingTarget, Mode=OneWay}"
+                       Foreground="{StaticResource InkPathBrush}"/>
+                </TextBlock>
+                <TextBlock Text="{Binding Consequence}"
+                           FontFamily="{StaticResource TextFont}"
+                           FontSize="{StaticResource FontSizeMeta}"
+                           Foreground="{StaticResource Ink3Brush}"
+                           TextWrapping="Wrap" Margin="0,4,0,0"/>
+              </StackPanel>
+
+              <StackPanel Grid.Column="2" VerticalAlignment="Top">
+                <TextBlock Text="{Binding Hive}" HorizontalAlignment="Right"
+                           FontFamily="{StaticResource MonoFont}"
+                           FontSize="{StaticResource FontSizeChip}"
+                           Foreground="{StaticResource Ink4Brush}"/>
+                <!-- Что именно уйдёт. Значение и ключ целиком это разные объёмы
+                     потери, и решается это глазами по строке, а не в диалоге. -->
+                <TextBlock Text="{Binding KindLabel}" HorizontalAlignment="Right"
+                           Margin="0,4,0,0"
+                           FontFamily="{StaticResource TextFont}"
+                           FontSize="{StaticResource FontSizeMeta}"
+                           Foreground="{StaticResource Ink3Brush}"
+                           AutomationProperties.AutomationId="registry-row-kind"/>
+                <TextBlock Text="{Binding ViewLabel}" HorizontalAlignment="Right"
+                           Margin="0,2,0,0"
+                           FontFamily="{StaticResource MonoFont}"
+                           FontSize="{StaticResource FontSizeChip}"
+                           Foreground="{StaticResource Ink4Brush}"/>
+              </StackPanel>
+            </Grid>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </Border>
+    </Grid>
+
+    <!-- ==== Шаг 2 из 4: подтверждение ====
+         Полный список того, с чем соглашаются, и ворота прокрутки: кнопка
+         оживает, только когда список долистан до конца. Список это и есть
+         предмет согласия, а кнопка, доступная без единого движения, превращает
+         полный предпросмотр обратно в число. -->
+    <Grid Visibility="{Binding Step, Converter={StaticResource Shag},
+                       ConverterParameter=Confirm}"
+          AutomationProperties.AutomationId="registry-step-confirm">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="*"/>
+        <RowDefinition Height="Auto"/>
+      </Grid.RowDefinitions>
+
+      <StackPanel Grid.Row="0" Margin="0,0,0,16">
+        <c:TrackedText Text="РЕЕСТР / ШАГ 2 ИЗ 4"
+                       Tracking="{StaticResource TrackingEyebrow}"
+                       FontFamily="{StaticResource TextFont}"
+                       FontSize="{StaticResource FontSizeEyebrow}"
+                       Foreground="{StaticResource Ink3Brush}"/>
+        <TextBlock Text="{Binding SelectedLabel}" Margin="0,6,0,0"
+                   FontFamily="{StaticResource DisplayFont}"
+                   FontSize="{StaticResource FontSizeH1}"
+                   Foreground="{StaticResource InkBrush}"
+                   AutomationProperties.AutomationId="registry-confirm-count"/>
+        <TextBlock Text="{Binding RestorePointNote}" TextWrapping="Wrap" Margin="0,8,0,0"
+                   FontFamily="{StaticResource TextFont}"
+                   FontSize="{StaticResource FontSizeSub}"
+                   Foreground="{StaticResource Ink2Brush}"
+                   AutomationProperties.AutomationId="registry-restore-note"/>
+        <TextBlock TextWrapping="Wrap" Margin="0,6,0,0"
+                   FontFamily="{StaticResource TextFont}"
+                   FontSize="{StaticResource FontSizeSub}"
+                   Foreground="{StaticResource Ink2Brush}"
+                   Text="{Binding BackupNote}"/>
+      </StackPanel>
+
+      <Border Grid.Row="1" Background="{StaticResource CardBrush}"
+              BorderBrush="{StaticResource LineBrush}" BorderThickness="1">
+        <ListBox ItemsSource="{Binding SelectedRows}"
+                 VirtualizingPanel.ScrollUnit="Pixel"
+                 b:ScrolledToEnd.Watch="True"
+                 b:ScrolledToEnd.Reached="{Binding Confirmed, Mode=OneWayToSource}"
+                 AutomationProperties.AutomationId="registry-confirm-list">
+          <ListBox.ItemTemplate>
+            <DataTemplate DataType="{x:Type vm:RegistryFindingViewModel}">
+              <StackPanel Margin="{StaticResource PadRow}">
+                <TextBlock FontFamily="{StaticResource MonoFont}"
+                           FontSize="{StaticResource FontSizeMono}"
+                           Foreground="{StaticResource InkBrush}"
+                           TextTrimming="CharacterEllipsis">
+                  <Run Text="{Binding KeyPath, Mode=OneWay}"/>
+                  <Run Text="\" Foreground="{StaticResource Ink4Brush}"/>
+                  <Run Text="{Binding ValueName, Mode=OneWay}"/>
+                </TextBlock>
+                <TextBlock FontFamily="{StaticResource TextFont}"
+                           FontSize="{StaticResource FontSizeMeta}"
+                           Foreground="{StaticResource Ink3Brush}" Margin="0,4,0,0">
+                  <Run Text="Уйдёт:"/>
+                  <Run Text="{Binding KindLabel, Mode=OneWay}"
+                       Foreground="{StaticResource Ink2Brush}"/>
+                  <Run Text="{Binding ViewLabel, Mode=OneWay}"/>
+                </TextBlock>
+              </StackPanel>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </Border>
+
+      <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,16,0,0">
+        <Button Content="Назад к выбору" Margin="0,0,8,0"
+                Command="{Binding NazadKVyboruCommand}"
+                AutomationProperties.AutomationId="registry-back"/>
+        <Button Content="Удалить записи" Style="{StaticResource PrimaryButton}"
+                Command="{Binding UdalitCommand}"
+                AutomationProperties.AutomationId="registry-confirm-delete"/>
+      </StackPanel>
+    </Grid>
+
+    <!-- ==== Шаг 3 из 4: ход ====
+         Освобождённых байт здесь нет и не будет: раздел 9 спеки запрещает
+         показывать их для реестра, потому что их там нет. -->
+    <Grid Visibility="{Binding Step, Converter={StaticResource Shag},
+                       ConverterParameter=Running}"
+          AutomationProperties.AutomationId="registry-step-running">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="*"/>
+      </Grid.RowDefinitions>
+
+      <Grid Grid.Row="0" Margin="0,0,0,16">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <StackPanel Grid.Column="0">
+          <c:TrackedText Text="РЕЕСТР / ШАГ 3 ИЗ 4"
+                         Tracking="{StaticResource TrackingEyebrow}"
+                         FontFamily="{StaticResource TextFont}"
+                         FontSize="{StaticResource FontSizeEyebrow}"
+                         Foreground="{StaticResource Ink3Brush}"/>
+          <TextBlock Text="Убираем записи" Margin="0,6,0,0"
+                     FontFamily="{StaticResource DisplayFont}"
+                     FontSize="{StaticResource FontSizeH1}"
+                     Foreground="{StaticResource InkBrush}"/>
+        </StackPanel>
+
+        <Button Grid.Column="1" Content="Остановить" VerticalAlignment="Center"
+                Command="{Binding OstanovitCommand}"
+                AutomationProperties.AutomationId="registry-running-stop"/>
+      </Grid>
+
+      <StackPanel Grid.Row="1" Margin="0,0,0,16">
+        <ProgressBar Value="{Binding State.ProgressShare, Mode=OneWay, TargetNullValue=0}"
+                     AutomationProperties.AutomationId="registry-running-progress"/>
+        <TextBlock Text="{Binding State.ProgressPath}"
+                   FontFamily="{StaticResource MonoFont}"
+                   FontSize="{StaticResource FontSizeMono}"
+                   Foreground="{StaticResource Ink4Brush}"
+                   TextTrimming="CharacterEllipsis" Margin="0,10,0,0"/>
+      </StackPanel>
+
+      <Border Grid.Row="2" Background="{StaticResource CardBrush}"
+              BorderBrush="{StaticResource LineBrush}" BorderThickness="1">
+        <ListBox ItemsSource="{Binding Running}"
+                 ItemTemplate="{StaticResource OutcomeRowTemplate}"
+                 VirtualizingPanel.ScrollUnit="Pixel"
+                 AutomationProperties.AutomationId="registry-running-list"/>
+      </Border>
+    </Grid>
+
+    <!-- ==== Шаг 4 из 4: итог ==== -->
+    <Grid Visibility="{Binding Step, Converter={StaticResource Shag},
+                       ConverterParameter=Report}"
+          AutomationProperties.AutomationId="registry-step-report">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="*"/>
+        <RowDefinition Height="Auto"/>
+      </Grid.RowDefinitions>
+
+      <StackPanel Grid.Row="0" Margin="0,0,0,16">
+        <c:TrackedText Text="РЕЕСТР / ШАГ 4 ИЗ 4"
+                       Tracking="{StaticResource TrackingEyebrow}"
+                       FontFamily="{StaticResource TextFont}"
+                       FontSize="{StaticResource FontSizeEyebrow}"
+                       Foreground="{StaticResource Ink3Brush}"/>
+        <TextBlock Text="{Binding ReportSummary}" Margin="0,6,0,0" TextWrapping="Wrap"
+                   FontFamily="{StaticResource DisplayFont}"
+                   FontSize="{StaticResource FontSizeH1}"
+                   Foreground="{StaticResource InkBrush}"
+                   AutomationProperties.AutomationId="registry-report-summary"/>
+      </StackPanel>
+
+      <!-- Единственный обязательный путь отката назван АДРЕСОМ, а не словом
+           «бэкап сделан»: тому, кому нужен откат, нужен файл. -->
+      <Border Grid.Row="1" Background="{StaticResource AccentFill2Brush}"
+              BorderBrush="{StaticResource AccentLineBrush}" BorderThickness="1"
+              Padding="14,11" Margin="0,0,0,16">
+        <StackPanel>
+          <TextBlock TextWrapping="Wrap"
+                     FontFamily="{StaticResource TextFont}"
+                     FontSize="{StaticResource FontSizeSub}"
+                     Foreground="{StaticResource Ink2Brush}">
+            <Run Text="Откат:" FontWeight="SemiBold"
+                 Foreground="{StaticResource InkBrush}"/>
+            <Run Text="{Binding BackupNote, Mode=OneWay}"/>
+          </TextBlock>
+          <TextBlock Text="{Binding BackupDirectory}" TextWrapping="Wrap" Margin="0,4,0,0"
+                     Visibility="{Binding BackupEnabled, Converter={StaticResource VidnoKogdaDa}}"
+                     FontFamily="{StaticResource MonoFont}"
+                     FontSize="{StaticResource FontSizeMono}"
+                     Foreground="{StaticResource InkPathBrush}"
+                     AutomationProperties.AutomationId="registry-report-backups"/>
+          <TextBlock Text="{Binding RestorePointNote}" TextWrapping="Wrap" Margin="0,6,0,0"
+                     FontFamily="{StaticResource TextFont}"
+                     FontSize="{StaticResource FontSizeMeta}"
+                     Foreground="{StaticResource Ink3Brush}"/>
+        </StackPanel>
+      </Border>
+
+      <Border Grid.Row="2" Background="{StaticResource CardBrush}"
+              BorderBrush="{StaticResource LineBrush}" BorderThickness="1">
+        <ListBox ItemsSource="{Binding Running}"
+                 ItemTemplate="{StaticResource OutcomeRowTemplate}"
+                 VirtualizingPanel.ScrollUnit="Pixel"
+                 AutomationProperties.AutomationId="registry-report-list"/>
+      </Border>
+
+      <Button Grid.Row="3" Content="Готово" HorizontalAlignment="Left" Margin="0,16,0,0"
+              Style="{StaticResource PrimaryButton}"
+              Command="{Binding ZavershitCommand}"
+              AutomationProperties.AutomationId="registry-report-done"/>
+    </Grid>
+
+    <!-- ==== Панель бэкапов ====
+         Поверх всех шагов, а не пятым шагом: откат зовут и из выбора, и из
+         отчёта, а шаг заставил бы выбирать между ними.
+
+         Список СВОИХ файлов, а не системный диалог. Раздел 15 спеки запрещает
+         стандартные контролы, но главное не это: импорт .reg это ЗАПИСЬ в
+         реестр, и продукт, импортирующий файл, который написал не он,
+         перестаёт быть продуктом, удаляющим только доказанное. -->
+    <Border Background="{StaticResource CardBrush}"
+            BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+            Visibility="{Binding BackupsOpen, Converter={StaticResource VidnoKogdaDa}}"
+            AutomationProperties.AutomationId="registry-backups-panel">
+      <Grid Margin="{StaticResource PadRow}">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="0,0,0,12">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+          </Grid.ColumnDefinitions>
+
+          <StackPanel Grid.Column="0">
+            <TextBlock Text="Откат из бэкапа"
+                       FontFamily="{StaticResource DisplayFont}"
+                       FontSize="{StaticResource FontSizeSectionTitle}"
+                       Foreground="{StaticResource InkBrush}"/>
+            <TextBlock TextWrapping="Wrap" Margin="0,4,0,0"
+                       FontFamily="{StaticResource TextFont}"
+                       FontSize="{StaticResource FontSizeMeta}"
+                       Foreground="{StaticResource Ink3Brush}"
+                       Text="Выберите сохранённую запись. Изменённые соседние записи остаются на месте. Старые копии без точных сведений показаны для справки"/>
+          </StackPanel>
+
+          <Button Grid.Column="1" Content="Закрыть" VerticalAlignment="Top"
+                  Command="{Binding ZakryitBekapyCommand}"
+                  AutomationProperties.AutomationId="registry-backups-close"/>
+        </Grid>
+
+        <TextBlock Grid.Row="1" Text="{Binding RollbackNote}" TextWrapping="Wrap"
+                   Margin="0,0,0,12"
+                   FontFamily="{StaticResource TextFont}"
+                   FontSize="{StaticResource FontSizeSub}"
+                   Foreground="{StaticResource Ink2Brush}"
+                   AutomationProperties.AutomationId="registry-rollback-note"/>
+
+        <ListBox Grid.Row="2" ItemsSource="{Binding Backups}"
+                 VirtualizingPanel.ScrollUnit="Pixel"
+                 AutomationProperties.AutomationId="registry-backups-list">
+          <ListBox.ItemTemplate>
+            <DataTemplate DataType="{x:Type svc:RegistryBackupFile}">
+              <Grid Margin="{StaticResource PadRow}"
+                    AutomationProperties.AutomationId="registry-backup-row">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*"/>
+                  <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                  <TextBlock Text="{Binding Address}" TextWrapping="Wrap" Margin="0,0,0,5"
+                             FontFamily="{StaticResource MonoFont}" Foreground="{StaticResource InkPathBrush}"/>
+                  <TextBlock Text="{Binding FileName}"
+                             FontFamily="{StaticResource MonoFont}"
+                             FontSize="{StaticResource FontSizeMono}"
+                             Foreground="{StaticResource InkBrush}"
+                             TextTrimming="CharacterEllipsis"/>
+                  <TextBlock FontFamily="{StaticResource TextFont}"
+                             FontSize="{StaticResource FontSizeMeta}"
+                             Foreground="{StaticResource Ink3Brush}" Margin="0,4,0,0">
+                    <Run Text="{Binding WrittenUtc, StringFormat='{}{0:dd.MM.yyyy HH:mm}', Mode=OneWay}"/>
+                    <Run Text="{Binding SizeBytes, Converter={StaticResource Razmer}, Mode=OneWay}"/>
+                  </TextBlock>
+
+                  <!-- Негодный файл ПОКАЗАН и помечен, а не спрятан. Спрятать
+                       значит оставить человека гадать, куда делся его бэкап. -->
+                  <TextBlock Text="{Binding Reason}" TextWrapping="Wrap" Margin="0,4,0,0"
+                             Visibility="{Binding Valid, Converter={StaticResource VidnoKogdaNet}}"
+                             FontFamily="{StaticResource TextFont}"
+                             FontSize="{StaticResource FontSizeMeta}"
+                             Foreground="{StaticResource Ink4Brush}"/>
+                </StackPanel>
+
+                <Button Grid.Column="1" Content="Восстановить" VerticalAlignment="Top"
+                        IsEnabled="{Binding Valid}"
+                        Command="{Binding DataContext.VosstanovitCommand,
+                                  RelativeSource={RelativeSource AncestorType=ListBox}}"
+                        CommandParameter="{Binding}"
+                        AutomationProperties.AutomationId="registry-backup-restore"/>
+              </Grid>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </Grid>
+    </Border>
+  </Grid>
+</UserControl>

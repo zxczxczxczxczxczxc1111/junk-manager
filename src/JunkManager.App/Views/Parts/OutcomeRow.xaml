@@ -1,0 +1,113 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:conv="clr-namespace:JunkManager.App.Converters"
+                    xmlns:del="clr-namespace:JunkManager.Deletion;assembly=JunkManager.Deletion">
+
+  <conv:ByteSizeConverter x:Key="RazmerIshoda"/>
+  <conv:BoolToVisibilityConverter x:Key="VidnoKogdaEstText"/>
+
+  <!--
+    Одна строка исхода удаления. Заведён общим, потому что ровно этот шаблон
+    показывают ТРИ места: ход очистки, итог очистки и журнал. Три копии
+    разъехались бы на первой же правке формулировки.
+
+    Четыре исхода различаются ФОРМОЙ, СЛОВОМ и цветом. Одного цвета мало:
+    «пропущено» и «остановлено» значат противоположное («решили не брать»
+    против «ты остановил»), а различает их только оттенок серого от лилового.
+    Журнал открывают ровно тогда, когда что-то пошло не так.
+  -->
+  <DataTemplate x:Key="OutcomeRowTemplate" DataType="{x:Type del:DeleteOutcome}">
+    <Border BorderBrush="{StaticResource LineBrush}"
+            BorderThickness="{StaticResource HairlineBottom}"
+            Padding="{StaticResource PadRow}">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="128"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Залитая точка: удалено. Остальные три формы ставят триггеры. -->
+        <Path x:Name="Znak" Grid.Column="0"
+              Stretch="None" VerticalAlignment="Top"
+              Margin="0,4,12,0"
+              Data="M 5,2 A 3,3 0 1 1 4.99,2 Z"
+              Fill="{StaticResource OkBrush}"
+              Stroke="{StaticResource OkBrush}" StrokeThickness="1.4"/>
+
+        <StackPanel Grid.Column="1" Margin="0,0,16,0">
+          <TextBlock Text="{Binding Path}"
+                     FontFamily="{StaticResource MonoFont}"
+                     FontSize="{StaticResource FontSizePath}"
+                     Foreground="{StaticResource InkPathBrush}"
+                     TextTrimming="CharacterEllipsis"/>
+
+          <!-- Причина показывается всегда, когда она есть. Отказ без причины
+               человек читает как «сломалось само по себе». -->
+          <TextBlock Text="{Binding Reason}"
+                     FontFamily="{StaticResource TextFont}"
+                     FontSize="{StaticResource FontSizeMeta}"
+                     Foreground="{StaticResource Ink2Brush}"
+                     TextWrapping="Wrap" Margin="0,4,0,0"
+                     Visibility="{Binding Reason,
+                                  Converter={StaticResource VidnoKogdaEstText}}"/>
+
+          <TextBlock FontFamily="{StaticResource TextFont}"
+                     FontSize="{StaticResource FontSizeMeta}"
+                     Foreground="{StaticResource Ink3Brush}"
+                     TextWrapping="Wrap" Margin="0,4,0,0"
+                     Visibility="{Binding HoldingProcess,
+                                  Converter={StaticResource VidnoKogdaEstText}}">
+            <Run Text="держит процесс"/>
+            <Run Text="{Binding HoldingProcess, Mode=OneWay}"/>
+          </TextBlock>
+        </StackPanel>
+
+        <TextBlock Grid.Column="2" VerticalAlignment="Top" Margin="0,0,16,0"
+                   FontFamily="{StaticResource MonoFont}"
+                   FontSize="{StaticResource FontSizeRow}"
+                   Foreground="{StaticResource InkBrush}"
+                   Text="{Binding BytesFreed, Converter={StaticResource RazmerIshoda}, Mode=OneWay}"/>
+
+        <TextBlock x:Name="Slovo" Grid.Column="3" VerticalAlignment="Top"
+                   HorizontalAlignment="Right"
+                   FontFamily="{StaticResource TextFont}"
+                   FontSize="{StaticResource FontSizeSub}"
+                   Foreground="{StaticResource OkBrush}"
+                   Text="удалено"
+                   AutomationProperties.AutomationId="outcome-status"/>
+      </Grid>
+    </Border>
+
+    <DataTemplate.Triggers>
+      <!-- Пустой контур квадрата. -->
+      <DataTrigger Binding="{Binding Status}" Value="Skipped">
+        <Setter TargetName="Znak" Property="Data" Value="M 1,1 H 9 V 9 H 1 Z"/>
+        <Setter TargetName="Znak" Property="Fill" Value="Transparent"/>
+        <Setter TargetName="Znak" Property="Stroke" Value="{StaticResource Ink3Brush}"/>
+        <Setter TargetName="Slovo" Property="Text" Value="пропущено"/>
+        <Setter TargetName="Slovo" Property="Foreground" Value="{StaticResource Ink3Brush}"/>
+      </DataTrigger>
+
+      <!-- Контур треугольника. -->
+      <DataTrigger Binding="{Binding Status}" Value="Failed">
+        <Setter TargetName="Znak" Property="Data" Value="M 5,0.6 L 9.6,9.4 H 0.4 Z"/>
+        <Setter TargetName="Znak" Property="Fill" Value="Transparent"/>
+        <Setter TargetName="Znak" Property="Stroke" Value="{StaticResource DangerBrush}"/>
+        <Setter TargetName="Slovo" Property="Text" Value="не удалось"/>
+        <Setter TargetName="Slovo" Property="Foreground" Value="{StaticResource DangerBrush}"/>
+      </DataTrigger>
+
+      <!-- Квадрат с вертикальной чертой: знак паузы, а не отказа. -->
+      <DataTrigger Binding="{Binding Status}" Value="Cancelled">
+        <Setter TargetName="Znak" Property="Data" Value="M 1,1 H 9 V 9 H 1 Z M 5,1 V 9"/>
+        <Setter TargetName="Znak" Property="Fill" Value="Transparent"/>
+        <Setter TargetName="Znak" Property="Stroke" Value="{StaticResource AccentBrush}"/>
+        <Setter TargetName="Slovo" Property="Text" Value="остановлено"/>
+        <Setter TargetName="Slovo" Property="Foreground" Value="{StaticResource AccentBrush}"/>
+      </DataTrigger>
+    </DataTemplate.Triggers>
+  </DataTemplate>
+
+</ResourceDictionary>

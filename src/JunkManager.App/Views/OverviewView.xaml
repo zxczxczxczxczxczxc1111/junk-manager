@@ -1,0 +1,353 @@
+<UserControl x:Class="JunkManager.App.Views.OverviewView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:JunkManager.App.Controls"
+             xmlns:conv="clr-namespace:JunkManager.App.Converters"
+             xmlns:vm="clr-namespace:JunkManager.App.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             d:DataContext="{d:DesignInstance Type=vm:OverviewViewModel}"
+             mc:Ignorable="d"
+             x:ClassModifier="internal">
+
+  <!-- Своего StateHost здесь нет, и это отступление от раскладки задачи 8.
+       Оболочка уже держит один: у неё есть и фаза, и плашка ограничения, и они
+       приходят из состояния ЭТОГО экрана, потому что раздел берёт состояние у
+       своего экрана. Вложенный второй нарисовал бы пустое состояние дважды, и
+       кнопка «Сканировать диск» появилась бы в двух экземплярах. -->
+
+  <UserControl.Resources>
+    <conv:ByteSizeConverter x:Key="Razmer"/>
+    <conv:PluralConverter x:Key="Sklonenie"/>
+  </UserControl.Resources>
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+
+    <!-- ==== Шапка ==== -->
+    <Grid Grid.Row="0" Margin="0,0,0,20">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="Auto"/>
+      </Grid.ColumnDefinitions>
+
+      <StackPanel Grid.Column="0">
+        <c:TrackedText Text="ОБЗОР"
+                       Tracking="{StaticResource TrackingEyebrow}"
+                       FontFamily="{StaticResource TextFont}"
+                       FontSize="{StaticResource FontSizeEyebrow}"
+                       Foreground="{StaticResource Ink3Brush}"/>
+        <TextBlock FontFamily="{StaticResource DisplayFont}"
+                   FontSize="{StaticResource FontSizeH1}"
+                   Margin="0,6,0,0"
+                   AutomationProperties.AutomationId="overview-disk-line">
+          <Run Text="Диск C:" Foreground="{StaticResource Ink3Brush}"/>
+          <Run Text="занято" Foreground="{StaticResource Ink3Brush}"/>
+          <Run Text="{Binding DiskUsedBytes, Converter={StaticResource Razmer}, Mode=OneWay}"
+               Foreground="{StaticResource InkBrush}" FontWeight="Bold"/>
+          <Run Text="из" Foreground="{StaticResource Ink3Brush}"/>
+          <Run Text="{Binding DiskTotalBytes, Converter={StaticResource Razmer}, Mode=OneWay}"
+               Foreground="{StaticResource InkBrush}" FontWeight="Bold"/>
+        </TextBlock>
+      </StackPanel>
+
+      <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+        <!-- Отмена стоит слева от запуска и показывается только во время
+             прохода: кнопка «Остановить», висящая на готовом экране, это
+             предложение остановить то, что уже кончилось. -->
+        <Button Content="Остановить"
+                Margin="0,0,10,0"
+                Command="{Binding OtmenitCommand}"
+                AutomationProperties.AutomationId="overview-cancel">
+          <Button.Style>
+            <Style TargetType="{x:Type Button}" BasedOn="{StaticResource SmallButton}">
+              <Setter Property="Visibility" Value="Collapsed"/>
+              <Style.Triggers>
+                <DataTrigger Binding="{Binding State.Phase}" Value="Loading">
+                  <Setter Property="Visibility" Value="Visible"/>
+                </DataTrigger>
+              </Style.Triggers>
+            </Style>
+          </Button.Style>
+        </Button>
+
+        <Button Content="Сканировать заново"
+                Style="{StaticResource PrimaryButton}"
+                Command="{Binding SkanirovatCommand}"
+                AutomationProperties.AutomationId="overview-rescan"/>
+      </StackPanel>
+    </Grid>
+
+    <!-- ==== Полоса тома ==== -->
+    <StackPanel Grid.Row="1" Margin="0,0,0,20">
+      <c:DiskStrip Height="{StaticResource DiskStripHeight}"
+                   TotalBytes="{Binding DiskTotalBytes}"
+                   UsedBytes="{Binding DiskUsedBytes}"
+                   FoundBytes="{Binding FoundBytes}"
+                   AutomationProperties.AutomationId="disk-strip"/>
+
+      <StackPanel Orientation="Horizontal" Margin="0,9,0,0">
+        <StackPanel Orientation="Horizontal" Margin="0,0,22,0">
+          <Rectangle Width="8" Height="8" Fill="{StaticResource RaisedBrush}"
+                     VerticalAlignment="Center" Margin="0,0,7,0"/>
+          <TextBlock Text="занято прочим"
+                     FontFamily="{StaticResource TextFont}"
+                     FontSize="{StaticResource FontSizeMeta}"
+                     Foreground="{StaticResource Ink3Brush}"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal" Margin="0,0,22,0">
+          <Rectangle Width="8" Height="8" Fill="{StaticResource AccentFillBrush}"
+                     VerticalAlignment="Center" Margin="0,0,7,0"/>
+          <TextBlock FontFamily="{StaticResource TextFont}"
+                     FontSize="{StaticResource FontSizeMeta}"
+                     Foreground="{StaticResource Ink3Brush}">
+            <Run Text="найдено мусора"/>
+            <Run Text="{Binding FoundBytes, Converter={StaticResource Razmer}, Mode=OneWay}"
+                 Foreground="{StaticResource InkBrush}" FontWeight="Bold"/>
+          </TextBlock>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal">
+          <Rectangle Width="8" Height="8" Fill="{StaticResource LineBrush}"
+                     VerticalAlignment="Center" Margin="0,0,7,0"/>
+          <TextBlock Text="свободно"
+                     FontFamily="{StaticResource TextFont}"
+                     FontSize="{StaticResource FontSizeMeta}"
+                     Foreground="{StaticResource Ink3Brush}"/>
+        </StackPanel>
+      </StackPanel>
+    </StackPanel>
+
+    <!-- ==== Проводник: категории слева, находки справа ==== -->
+    <Grid Grid.Row="2">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="{StaticResource CategoryColumnWidth}"/>
+        <ColumnDefinition Width="*"/>
+      </Grid.ColumnDefinitions>
+
+      <Border Grid.Column="0" Background="{StaticResource PanelBrush}"
+              BorderBrush="{StaticResource LineBrush}" BorderThickness="1,1,0,1">
+        <ScrollViewer>
+          <ItemsControl ItemsSource="{Binding Categories}"
+                        AutomationProperties.AutomationId="category-list">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="{x:Type vm:CategoryViewModel}">
+                <Button Command="{Binding DataContext.VybratCommand,
+                                  RelativeSource={RelativeSource AncestorType=UserControl}}"
+                        CommandParameter="{Binding}"
+                        Style="{StaticResource CategoryRowButton}"
+                        AutomationProperties.Name="{Binding Name}"
+                        AutomationProperties.AutomationId="category-row">
+                  <Grid>
+                    <Grid.RowDefinitions>
+                      <RowDefinition Height="Auto"/>
+                      <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="*"/>
+                      <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,10,0">
+                      <TextBlock Text="{Binding Name}"
+                                 FontFamily="{StaticResource TextFont}"
+                                 FontSize="{StaticResource FontSizeRow}"
+                                 Foreground="{StaticResource InkBrush}"
+                                 TextTrimming="CharacterEllipsis"/>
+                      <TextBlock FontFamily="{StaticResource TextFont}"
+                                 FontSize="{StaticResource FontSizeMeta}"
+                                 Foreground="{StaticResource Ink3Brush}"
+                                 Margin="0,3,0,0"
+                                 Text="{Binding Count, Converter={StaticResource Sklonenie},
+                                        ConverterParameter='находка|находки|находок', Mode=OneWay}"/>
+                    </StackPanel>
+
+                    <TextBlock Grid.Row="0" Grid.Column="1"
+                               VerticalAlignment="Center"
+                               FontFamily="{StaticResource MonoFont}"
+                               FontSize="{StaticResource FontSizeRow}"
+                               Foreground="{StaticResource InkBrush}"
+                               Text="{Binding TotalBytes, Converter={StaticResource Razmer}, Mode=OneWay}"/>
+
+                    <!-- Тонкая полоса доли опасного. Медь живёт здесь и на
+                         плашке, и больше нигде. Доля отмеряется от ширины
+                         дорожки многозначной привязкой: ширина известна только
+                         во время раскладки, и через параметр её не передать. -->
+                    <Grid x:Name="RiskTrack" Grid.Row="1" Grid.ColumnSpan="2"
+                          Height="2" Margin="0,9,0,0">
+                      <Rectangle Fill="{StaticResource AccentFillBrush}"/>
+                      <Rectangle Fill="{StaticResource RiskBrush}"
+                                 HorizontalAlignment="Right">
+                        <Rectangle.Width>
+                          <MultiBinding Converter="{StaticResource DolyaVShirinu}" Mode="OneWay">
+                            <Binding Path="RiskShare"/>
+                            <Binding Path="ActualWidth" ElementName="RiskTrack"/>
+                          </MultiBinding>
+                        </Rectangle.Width>
+                      </Rectangle>
+                    </Grid>
+                  </Grid>
+                </Button>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </Border>
+
+      <Border Grid.Column="1" Background="{StaticResource CardBrush}"
+              BorderBrush="{StaticResource LineBrush}" BorderThickness="1">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+          </Grid.RowDefinitions>
+
+          <Border Grid.Row="0" BorderBrush="{StaticResource LineBrush}"
+                  BorderThickness="{StaticResource HairlineBottom}"
+                  Padding="{StaticResource PadCell}">
+            <StackPanel Orientation="Horizontal">
+              <TextBlock Text="{Binding Current.Name}"
+                         FontFamily="{StaticResource DisplayFont}"
+                         FontSize="{StaticResource FontSizeSectionTitle}"
+                         Foreground="{StaticResource InkBrush}"
+                         AutomationProperties.AutomationId="category-title"/>
+              <TextBlock Margin="12,0,0,0" VerticalAlignment="Center"
+                         FontFamily="{StaticResource MonoFont}"
+                         FontSize="{StaticResource FontSizeMeta}"
+                         Foreground="{StaticResource Ink3Brush}"
+                         Text="{Binding Current.TotalBytes,
+                                Converter={StaticResource Razmer}, Mode=OneWay}"/>
+            </StackPanel>
+          </Border>
+
+          <!-- Виртуализация включена руками: ItemsControl не виртуализирует
+               ничего по умолчанию, и семьдесят тысяч строк из задачи 9 создали
+               бы семьдесят тысяч контейнеров при первом же показе категории. -->
+          <ItemsControl Grid.Row="1" ItemsSource="{Binding Current.Findings}"
+                        VirtualizingPanel.IsVirtualizing="True"
+                        VirtualizingPanel.VirtualizationMode="Recycling"
+                        ScrollViewer.CanContentScroll="True"
+                        AutomationProperties.AutomationId="finding-list">
+            <ItemsControl.Template>
+              <ControlTemplate TargetType="{x:Type ItemsControl}">
+                <ScrollViewer Focusable="False">
+                  <ItemsPresenter/>
+                </ScrollViewer>
+              </ControlTemplate>
+            </ItemsControl.Template>
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <VirtualizingStackPanel/>
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate DataType="{x:Type vm:FindingViewModel}">
+                <Border BorderBrush="{StaticResource LineBrush}"
+                        BorderThickness="{StaticResource HairlineBottom}"
+                        Padding="{StaticResource PadRow}">
+                  <Grid>
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="*"/>
+                      <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Имя, последствие и путь одновременно и в полную ширину.
+                         Ради этого подача «Проводник» и выбрана: «что будет,
+                         если удалю» не должно требовать наведения. -->
+                    <StackPanel Grid.Column="0" Margin="0,0,18,0">
+                      <TextBlock Text="{Binding Name}"
+                                 FontFamily="{StaticResource TextFont}"
+                                 FontSize="{StaticResource FontSizeRow}"
+                                 FontWeight="SemiBold"
+                                 Foreground="{StaticResource InkBrush}"
+                                 TextTrimming="CharacterEllipsis"/>
+                      <TextBlock Text="{Binding Consequence}"
+                                 FontFamily="{StaticResource TextFont}"
+                                 FontSize="{StaticResource FontSizeSub}"
+                                 Foreground="{StaticResource Ink2Brush}"
+                                 TextWrapping="Wrap" LineHeight="18"
+                                 Margin="0,4,0,0"/>
+                      <TextBlock Text="{Binding Path}"
+                                 FontFamily="{StaticResource MonoFont}"
+                                 FontSize="{StaticResource FontSizePath}"
+                                 Foreground="{StaticResource InkPathBrush}"
+                                 TextTrimming="CharacterEllipsis"
+                                 Margin="0,5,0,0"/>
+                      <TextBlock Text="{Binding ScopeLabel}"
+                                 FontFamily="{StaticResource TextFont}"
+                                 FontSize="{StaticResource FontSizeMeta}"
+                                 Foreground="{StaticResource Ink3Brush}"
+                                 Margin="0,4,0,0"/>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                      <TextBlock HorizontalAlignment="Right"
+                                 FontFamily="{StaticResource MonoFont}"
+                                 FontSize="{StaticResource FontSizeRow}"
+                                 Foreground="{StaticResource InkBrush}"
+                                 Text="{Binding SizeBytes,
+                                        Converter={StaticResource Razmer}, Mode=OneWay}"/>
+                      <c:RiskChip Tier="{Binding Tier}" Margin="0,7,0,0"
+                                  HorizontalAlignment="Right"/>
+                      <TextBlock Text="{Binding AgeLabel}"
+                                 HorizontalAlignment="Right"
+                                 FontFamily="{StaticResource MonoFont}"
+                                 FontSize="{StaticResource FontSizeChip}"
+                                 Foreground="{StaticResource Ink3Brush}"
+                                 Margin="0,6,0,0"/>
+                    </StackPanel>
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </Grid>
+      </Border>
+    </Grid>
+
+    <!-- ==== Итог ==== -->
+    <Border Grid.Row="3" Background="{StaticResource PanelBrush}"
+            BorderBrush="{StaticResource LineBrush}" BorderThickness="1"
+            Padding="{StaticResource PadRow}" Margin="0,14,0,0">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+
+        <StackPanel Grid.Column="0">
+          <TextBlock FontFamily="{StaticResource DisplayFont}"
+                     FontSize="{StaticResource FontSizeSectionTitle}"
+                     Foreground="{StaticResource InkBrush}"
+                     Text="{Binding FoundBytes, Converter={StaticResource Razmer}, Mode=OneWay}"
+                     AutomationProperties.AutomationId="overview-total"/>
+          <TextBlock FontFamily="{StaticResource TextFont}"
+                     FontSize="{StaticResource FontSizeMeta}"
+                     Foreground="{StaticResource Ink3Brush}"
+                     Margin="0,3,0,0">
+            <Run Text="из них опасно"/>
+            <Run Text="{Binding RiskBytes, Converter={StaticResource Razmer}, Mode=OneWay}"/>
+          </TextBlock>
+        </StackPanel>
+
+        <!-- Команда берётся через StateHost, а не через предка-Window: набор
+             проверок отрывает содержимое от окна и вешает его прямо в
+             HwndSource, предка Window там нет вовсе, и привязка молча не
+             разрешалась. У StateHost контекст тот же, что у окна, это
+             оболочка. Просто ContentControl не годится: сам OverviewView это
+             UserControl, то есть ContentControl, и нашёлся бы он первым. -->
+        <Button Grid.Column="2" Content="Перейти к очистке"
+                Style="{StaticResource PrimaryButton}"
+                Command="{Binding DataContext.PereytiCommand,
+                          RelativeSource={RelativeSource AncestorType={x:Type c:StateHost}}}"
+                CommandParameter="files"
+                AutomationProperties.AutomationId="overview-goto-files"/>
+      </Grid>
+    </Border>
+  </Grid>
+</UserControl>

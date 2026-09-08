@@ -1,0 +1,64 @@
+{
+  "branches": [
+    { "id": "run-hkcu", "hive": "CurrentUser", "view": "Default", "kind": "Value",
+      "subKey": "Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+      "name": "Автозапуск текущего пользователя",
+      "consequence": "Уйдёт строка автозапуска, которая ссылается на несуществующий файл. Ни одна работающая программа от этого запускаться не перестанет." },
+
+    { "id": "runonce-hkcu", "hive": "CurrentUser", "view": "Default", "kind": "Value",
+      "subKey": "Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce",
+      "name": "Однократный автозапуск текущего пользователя",
+      "consequence": "Уйдёт разовое задание на запуск файла, которого нет. Такие задания оставляют после себя прерванные установки." },
+
+    { "id": "app-paths-hkcu", "hive": "CurrentUser", "view": "Default", "kind": "Key",
+      "subKey": "Software\\Microsoft\\Windows\\CurrentVersion\\App Paths",
+      "name": "Пути к программам текущего пользователя",
+      "consequence": "Уйдёт запись о том, где лежит программа, которой на диске нет. Запуск по короткому имени из окна Выполнить для неё и так не работает." },
+
+    { "id": "run-hklm-64", "hive": "LocalMachine", "view": "Registry64", "kind": "Value",
+      "subKey": "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run",
+      "name": "Автозапуск для всех пользователей",
+      "consequence": "Уйдёт общесистемная строка автозапуска на несуществующий файл. Требует прав администратора." },
+
+    { "id": "run-hklm-32", "hive": "LocalMachine", "view": "Registry32", "kind": "Value",
+      "subKey": "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run",
+      "name": "Автозапуск для всех пользователей, 32-битный вид",
+      "consequence": "То же самое, но в 32-битной проекции реестра. Туда пишут программы, собранные под x86." },
+
+    { "id": "runonce-hklm-64", "hive": "LocalMachine", "view": "Registry64", "kind": "Value",
+      "subKey": "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\RunOnce",
+      "name": "Однократный автозапуск для всех пользователей",
+      "consequence": "Уйдёт разовое общесистемное задание на запуск файла, которого нет." },
+
+    { "id": "runonce-hklm-32", "hive": "LocalMachine", "view": "Registry32", "kind": "Value",
+      "subKey": "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\RunOnce",
+      "name": "Однократный автозапуск для всех пользователей, 32-битный вид",
+      "consequence": "То же самое, но в 32-битной проекции реестра." },
+
+    { "id": "app-paths-hklm-64", "hive": "LocalMachine", "view": "Registry64", "kind": "Key",
+      "subKey": "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths",
+      "name": "Пути к программам для всех пользователей",
+      "consequence": "Уйдёт общесистемная запись о расположении программы, которой на диске нет." },
+
+    { "id": "shared-dlls-64", "hive": "LocalMachine", "view": "Registry64", "kind": "Value", "mode": "SharedDlls",
+      "subKey": "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\SharedDLLs",
+      "name": "Общие DLL, 64-битный вид",
+      "consequence": "Удалится только счётчик отсутствующей DLL с нулём ссылок. Проверьте вручную: незавершённую установку лучше сначала завершить или восстановить." },
+    { "id": "shared-dlls-32", "hive": "LocalMachine", "view": "Registry32", "kind": "Value", "mode": "SharedDlls",
+      "subKey": "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\SharedDLLs",
+      "name": "Общие DLL, 32-битный вид",
+      "consequence": "Удалится только счётчик отсутствующей DLL с нулём ссылок. Проверьте вручную: незавершённую установку лучше сначала завершить или восстановить." },
+    { "id": "user-com-64", "hive": "CurrentUser", "view": "Registry64", "kind": "Value", "mode": "ComServers",
+      "subKey": "Software\\Classes\\CLSID",
+      "name": "COM-компоненты пользователя, 64-битный вид",
+      "consequence": "Удалится только путь к отсутствующему серверу COM. Остальные параметры сохранятся. Это может изменить регистрацию компонента; выбирайте вручную после проверки программы-владельца." },
+    { "id": "user-com-32", "hive": "CurrentUser", "view": "Registry32", "kind": "Value", "mode": "ComServers",
+      "subKey": "Software\\Classes\\CLSID",
+      "name": "COM-компоненты пользователя, 32-битный вид",
+      "consequence": "Удалится только путь к отсутствующему серверу COM. Остальные параметры сохранятся. Это может изменить регистрацию компонента; выбирайте вручную после проверки программы-владельца." },
+    { "id": "user-file-associations", "hive": "CurrentUser", "view": "Default", "kind": "Value", "mode": "FileAssociations",
+      "subKey": "Software\\Classes",
+      "name": "Команды открытия файлов пользователя",
+      "consequence": "Удалится только команда открытия через отсутствующий EXE. Расширения файлов и соседние параметры сохранятся. Проверьте вручную, не требуется ли восстановить программу." }
+  ]
+}

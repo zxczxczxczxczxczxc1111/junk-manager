@@ -1,0 +1,189 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!-- Первый экран с прокруткой это первый экран, где наружу лезет ползунок
+       Aero: светлая стрелка на светлом жёлобе поверх тёмного окна.
+
+       Стрелок на концах нет. Это три пикселя зоны попадания, которыми никто не
+       пользуется, и два лишних шаблона, которые придётся держать тёмными. -->
+  <Style x:Key="ScrollThumbStyle" TargetType="{x:Type Thumb}">
+    <Setter Property="OverridesDefaultStyle" Value="True"/>
+    <Setter Property="IsTabStop" Value="False"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type Thumb}">
+          <!-- Внешний Border с Background: полностью прозрачный элемент не
+               получает событий мыши вовсе, и ползунок нельзя было бы схватить
+               за поля по краям. -->
+          <Border Background="Transparent">
+            <Border x:Name="Body"
+                    Background="{StaticResource LineHiBrush}"
+                    Margin="3,0"/>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Body" Property="Background" Value="{StaticResource Ink3Brush}"/>
+            </Trigger>
+            <Trigger Property="IsDragging" Value="True">
+              <Setter TargetName="Body" Property="Background" Value="{StaticResource AccentBrush}"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style x:Key="ScrollThumbHorizontalStyle" TargetType="{x:Type Thumb}"
+         BasedOn="{StaticResource ScrollThumbStyle}">
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type Thumb}">
+          <Border Background="Transparent">
+            <!-- Поля по другой оси. Один стиль на обе ориентации оставил бы
+                 горизонтальному ползунку поля слева и справа, то есть щели по
+                 концам и полную высоту жёлоба. -->
+            <Border x:Name="Body"
+                    Background="{StaticResource LineHiBrush}"
+                    Margin="0,3"/>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Body" Property="Background" Value="{StaticResource Ink3Brush}"/>
+            </Trigger>
+            <Trigger Property="IsDragging" Value="True">
+              <Setter TargetName="Body" Property="Background" Value="{StaticResource AccentBrush}"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style TargetType="{x:Type ScrollBar}">
+    <Setter Property="OverridesDefaultStyle" Value="True"/>
+    <Setter Property="SnapsToDevicePixels" Value="True"/>
+    <Setter Property="Focusable" Value="False"/>
+    <Setter Property="Width" Value="{StaticResource ScrollBarThickness}"/>
+    <Setter Property="MinWidth" Value="{StaticResource ScrollBarThickness}"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type ScrollBar}">
+          <Grid Background="{TemplateBinding Background}">
+            <Track x:Name="PART_Track" IsDirectionReversed="True">
+              <Track.Thumb>
+                <Thumb Style="{StaticResource ScrollThumbStyle}"/>
+              </Track.Thumb>
+              <!-- Страница вверх и вниз работают по-прежнему, они просто
+                   невидимы. Это и значит «кликается весь жёлоб».
+
+                   Имена обязательны, хотя кнопки не видны: в дереве
+                   автоматизации они есть, и без имени экранный диктор
+                   объявляет «кнопка» без продолжения. Живой прогон
+                   05.09.2026 нашёл ровно эти две безымянными на экране
+                   настроек. -->
+              <Track.IncreaseRepeatButton>
+                <RepeatButton Command="ScrollBar.PageDownCommand"
+                              AutomationProperties.Name="Страница вниз"
+                              Opacity="0" Focusable="False" IsTabStop="False"/>
+              </Track.IncreaseRepeatButton>
+              <Track.DecreaseRepeatButton>
+                <RepeatButton Command="ScrollBar.PageUpCommand"
+                              AutomationProperties.Name="Страница вверх"
+                              Opacity="0" Focusable="False" IsTabStop="False"/>
+              </Track.DecreaseRepeatButton>
+            </Track>
+          </Grid>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+    <Style.Triggers>
+      <Trigger Property="Orientation" Value="Horizontal">
+        <Setter Property="Width" Value="Auto"/>
+        <Setter Property="MinWidth" Value="0"/>
+        <Setter Property="Height" Value="{StaticResource ScrollBarThickness}"/>
+        <Setter Property="MinHeight" Value="{StaticResource ScrollBarThickness}"/>
+        <Setter Property="Template">
+          <Setter.Value>
+            <ControlTemplate TargetType="{x:Type ScrollBar}">
+              <Grid Background="{TemplateBinding Background}">
+                <Track x:Name="PART_Track" IsDirectionReversed="False">
+                  <Track.Thumb>
+                    <Thumb Style="{StaticResource ScrollThumbHorizontalStyle}"/>
+                  </Track.Thumb>
+                  <Track.IncreaseRepeatButton>
+                    <RepeatButton Command="ScrollBar.PageRightCommand"
+                                  AutomationProperties.Name="Страница вправо"
+                                  Opacity="0" Focusable="False" IsTabStop="False"/>
+                  </Track.IncreaseRepeatButton>
+                  <Track.DecreaseRepeatButton>
+                    <RepeatButton Command="ScrollBar.PageLeftCommand"
+                                  AutomationProperties.Name="Страница влево"
+                                  Opacity="0" Focusable="False" IsTabStop="False"/>
+                  </Track.DecreaseRepeatButton>
+                </Track>
+              </Grid>
+            </ControlTemplate>
+          </Setter.Value>
+        </Setter>
+      </Trigger>
+    </Style.Triggers>
+  </Style>
+
+  <Style TargetType="{x:Type ScrollViewer}">
+    <Setter Property="OverridesDefaultStyle" Value="True"/>
+    <Setter Property="Focusable" Value="False"/>
+    <Setter Property="HorizontalScrollBarVisibility" Value="Disabled"/>
+    <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
+    <!-- True, а не False: прокрутка по элементам это то, чем работает
+         виртуализация. Попиксельная плавнее и создаёт каждый контейнер, чтобы
+         его измерить, то есть ровно обратное тому, что нужно списку в семьдесят
+         тысяч строк. -->
+    <Setter Property="CanContentScroll" Value="True"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type ScrollViewer}">
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="*"/>
+              <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Имя обязательно. ScrollViewer ищет ребёнка ровно по нему, и без
+                 имени содержимое не отдаёт IScrollInfo: колесо мыши перестаёт
+                 прокручивать, ползунок стоит на месте, а нарисовано при этом
+                 всё правильно. -->
+            <ScrollContentPresenter x:Name="PART_ScrollContentPresenter"
+                                    Grid.Row="0" Grid.Column="0"
+                                    CanContentScroll="{TemplateBinding CanContentScroll}"
+                                    Content="{TemplateBinding Content}"
+                                    ContentTemplate="{TemplateBinding ContentTemplate}"
+                                    Margin="{TemplateBinding Padding}"/>
+
+            <!-- Value только на чтение. Перемещение ползунка приходит в
+                 ScrollViewer событием Scroll, а не привязкой, и TwoWay здесь
+                 даёт бесконечный круг обновлений при быстрой прокрутке. -->
+            <ScrollBar x:Name="PART_VerticalScrollBar" Grid.Row="0" Grid.Column="1"
+                       Orientation="Vertical"
+                       Maximum="{TemplateBinding ScrollableHeight}"
+                       ViewportSize="{TemplateBinding ViewportHeight}"
+                       Value="{TemplateBinding VerticalOffset}"
+                       Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}"/>
+
+            <ScrollBar x:Name="PART_HorizontalScrollBar" Grid.Row="1" Grid.Column="0"
+                       Orientation="Horizontal"
+                       Maximum="{TemplateBinding ScrollableWidth}"
+                       ViewportSize="{TemplateBinding ViewportWidth}"
+                       Value="{TemplateBinding HorizontalOffset}"
+                       Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"/>
+          </Grid>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+</ResourceDictionary>

@@ -1,0 +1,209 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <Style TargetType="{x:Type CheckBox}">
+    <Setter Property="OverridesDefaultStyle" Value="True"/>
+    <Setter Property="SnapsToDevicePixels" Value="True"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="Foreground" Value="{StaticResource Ink2Brush}"/>
+    <Setter Property="FontFamily" Value="{StaticResource TextFont}"/>
+    <Setter Property="FontSize" Value="{StaticResource FontSizeSub}"/>
+    <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRingStyle}"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type CheckBox}">
+          <!-- Transparent background, not null: a null background is not
+               hit-testable and the label stops being clickable. -->
+          <StackPanel Orientation="Horizontal" Background="Transparent">
+            <Border x:Name="Box"
+                    Width="{StaticResource CheckBoxSize}"
+                    Height="{StaticResource CheckBoxSize}"
+                    Background="{StaticResource SunkenBrush}"
+                    BorderBrush="{StaticResource LineHiBrush}"
+                    BorderThickness="1"
+                    VerticalAlignment="Top"
+                    Margin="0,1,10,0">
+              <Grid>
+                <!-- WPF measures StrokeDashArray in multiples of StrokeThickness,
+                     unlike SVG where it is absolute. This path is about 13 units
+                     long at thickness 2.2, so the dash has to be 7, not the 16
+                     the mockup uses. Copying the SVG number leaves the tick
+                     permanently drawn. -->
+                <Path x:Name="Tick"
+                      Data="M 3.2,7.8 L 6.2,10.8 L 12.0,4.2"
+                      Stroke="{StaticResource AccentInkBrush}"
+                      StrokeThickness="2.2"
+                      StrokeStartLineCap="Round"
+                      StrokeEndLineCap="Round"
+                      StrokeLineJoin="Round"
+                      StrokeDashArray="7 7"
+                      StrokeDashOffset="7"
+                      Stretch="None"/>
+                <Rectangle x:Name="Dash"
+                           Width="7" Height="2"
+                           Fill="{StaticResource AccentInkBrush}"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Visibility="Collapsed"/>
+              </Grid>
+            </Border>
+            <!-- RecognizesAccessKey stays False: an access key renders an
+                 underscore, and underscores are banned as an affordance. -->
+            <ContentPresenter x:Name="Label"
+                              VerticalAlignment="Top"
+                              RecognizesAccessKey="False"
+                              TextBlock.Foreground="{TemplateBinding Foreground}"
+                              TextBlock.FontFamily="{TemplateBinding FontFamily}"
+                              TextBlock.FontSize="{TemplateBinding FontSize}"/>
+          </StackPanel>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource Ink3Brush}"/>
+            </Trigger>
+            <Trigger Property="IsChecked" Value="True">
+              <Setter TargetName="Box" Property="Background" Value="{StaticResource AccentBrush}"/>
+              <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+              <Trigger.EnterActions>
+                <BeginStoryboard>
+                  <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="Tick"
+                                     Storyboard.TargetProperty="StrokeDashOffset"
+                                     To="0" Duration="{StaticResource MotionFast}">
+                      <DoubleAnimation.EasingFunction>
+                        <CubicEase EasingMode="EaseOut"/>
+                      </DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                  </Storyboard>
+                </BeginStoryboard>
+              </Trigger.EnterActions>
+              <Trigger.ExitActions>
+                <BeginStoryboard>
+                  <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="Tick"
+                                     Storyboard.TargetProperty="StrokeDashOffset"
+                                     To="7" Duration="{StaticResource MotionFast}"/>
+                  </Storyboard>
+                </BeginStoryboard>
+              </Trigger.ExitActions>
+            </Trigger>
+            <Trigger Property="IsChecked" Value="{x:Null}">
+              <Setter TargetName="Box" Property="Background" Value="{StaticResource AccentBrush}"/>
+              <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+              <Setter TargetName="Dash" Property="Visibility" Value="Visible"/>
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter Property="Opacity" Value="0.35"/>
+              <Setter Property="Cursor" Value="Arrow"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style TargetType="{x:Type RadioButton}">
+    <Setter Property="OverridesDefaultStyle" Value="True"/>
+    <Setter Property="SnapsToDevicePixels" Value="True"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="Foreground" Value="{StaticResource Ink2Brush}"/>
+    <Setter Property="FontFamily" Value="{StaticResource TextFont}"/>
+    <Setter Property="FontSize" Value="{StaticResource FontSizeSub}"/>
+    <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRingStyle}"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type RadioButton}">
+          <StackPanel Orientation="Horizontal" Background="Transparent">
+            <Grid Width="15" Height="15" VerticalAlignment="Top" Margin="0,1,10,0">
+              <Ellipse x:Name="Ring"
+                       Stroke="{StaticResource LineHiBrush}" StrokeThickness="1"
+                       Fill="{StaticResource SunkenBrush}"/>
+              <Ellipse x:Name="Dot" Width="7" Height="7"
+                       Fill="{StaticResource AccentBrush}" Opacity="0"/>
+            </Grid>
+            <ContentPresenter VerticalAlignment="Top" RecognizesAccessKey="False"
+                              TextBlock.Foreground="{TemplateBinding Foreground}"/>
+          </StackPanel>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Ring" Property="Stroke" Value="{StaticResource Ink3Brush}"/>
+            </Trigger>
+            <Trigger Property="IsChecked" Value="True">
+              <Setter TargetName="Ring" Property="Stroke" Value="{StaticResource AccentBrush}"/>
+              <Trigger.EnterActions>
+                <BeginStoryboard>
+                  <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="Dot"
+                                     Storyboard.TargetProperty="Opacity"
+                                     To="1" Duration="{StaticResource MotionFast}"/>
+                  </Storyboard>
+                </BeginStoryboard>
+              </Trigger.EnterActions>
+              <Trigger.ExitActions>
+                <BeginStoryboard>
+                  <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="Dot"
+                                     Storyboard.TargetProperty="Opacity"
+                                     To="0" Duration="{StaticResource MotionFast}"/>
+                  </Storyboard>
+                </BeginStoryboard>
+              </Trigger.ExitActions>
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter Property="Opacity" Value="0.35"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style TargetType="{x:Type TextBox}">
+    <Setter Property="OverridesDefaultStyle" Value="True"/>
+    <Setter Property="SnapsToDevicePixels" Value="True"/>
+    <Setter Property="Background" Value="{StaticResource SunkenBrush}"/>
+    <Setter Property="Foreground" Value="{StaticResource InkBrush}"/>
+    <Setter Property="BorderBrush" Value="{StaticResource LineHiBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="Padding" Value="10,8"/>
+    <Setter Property="FontFamily" Value="{StaticResource MonoFont}"/>
+    <Setter Property="FontSize" Value="{StaticResource FontSizeMeta}"/>
+    <!-- These three are properties, not brushes from a template, and they are
+         exactly where the Windows blue survives a rewritten template. -->
+    <Setter Property="CaretBrush" Value="{StaticResource AccentBrush}"/>
+    <Setter Property="SelectionBrush" Value="{StaticResource AccentBrush}"/>
+    <Setter Property="SelectionTextBrush" Value="{StaticResource AccentInkBrush}"/>
+    <Setter Property="SelectionOpacity" Value="1"/>
+    <!-- The default Cut/Copy/Paste menu is drawn by the system. Ours is defined
+         in Controls.Surfaces.xaml, which merges later, hence DynamicResource. -->
+    <Setter Property="ContextMenu" Value="{DynamicResource EditContextMenu}"/>
+    <!-- The border itself shows focus, so no ring on top of it. -->
+    <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type TextBox}">
+          <Border x:Name="Frame"
+                  Background="{TemplateBinding Background}"
+                  BorderBrush="{TemplateBinding BorderBrush}"
+                  BorderThickness="{TemplateBinding BorderThickness}"
+                  Padding="{TemplateBinding Padding}">
+            <ScrollViewer x:Name="PART_ContentHost"
+                          Focusable="False"
+                          HorizontalScrollBarVisibility="Hidden"
+                          VerticalScrollBarVisibility="Hidden"/>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Frame" Property="BorderBrush" Value="{StaticResource Ink3Brush}"/>
+            </Trigger>
+            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+              <Setter TargetName="Frame" Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter Property="Opacity" Value="0.35"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+</ResourceDictionary>

@@ -1,0 +1,145 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:c="clr-namespace:JunkManager.App.Controls">
+
+  <!-- Square corners, hairline border, uppercase tracked label. There is no
+       rounding and no shadow anywhere in this product except the window itself. -->
+  <Style x:Key="ButtonBase" TargetType="{x:Type ButtonBase}">
+    <Setter Property="OverridesDefaultStyle" Value="True"/>
+    <Setter Property="SnapsToDevicePixels" Value="True"/>
+    <Setter Property="Cursor" Value="Hand"/>
+    <Setter Property="Padding" Value="{StaticResource PadButton}"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderBrush" Value="{StaticResource LineHiBrush}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="Foreground" Value="{StaticResource InkBrush}"/>
+    <Setter Property="FontFamily" Value="{StaticResource DisplayFont}"/>
+    <Setter Property="FontSize" Value="{StaticResource FontSizeEyebrow}"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    <Setter Property="VerticalContentAlignment" Value="Center"/>
+    <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRingStyle}"/>
+    <Setter Property="c:Chrome.HoverBackground" Value="{StaticResource CardBrush}"/>
+    <Setter Property="c:Chrome.HoverBorderBrush" Value="{StaticResource Ink3Brush}"/>
+    <Setter Property="c:Chrome.PressedBackground" Value="{StaticResource RaisedBrush}"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type ButtonBase}">
+          <Border x:Name="Chrome"
+                  Background="{TemplateBinding Background}"
+                  BorderBrush="{TemplateBinding BorderBrush}"
+                  BorderThickness="{TemplateBinding BorderThickness}"
+                  Padding="{TemplateBinding Padding}"
+                  SnapsToDevicePixels="True">
+            <!-- Binding, not TemplateBinding: TemplateBinding does not run a type
+                 converter, and Content is typed object while Text is string. -->
+            <c:TrackedText x:Name="Label"
+                           Text="{Binding Content, RelativeSource={RelativeSource TemplatedParent}}"
+                           Tracking="{StaticResource TrackingButton}"
+                           Foreground="{TemplateBinding Foreground}"
+                           FontFamily="{TemplateBinding FontFamily}"
+                           FontSize="{TemplateBinding FontSize}"
+                           FontWeight="{TemplateBinding FontWeight}"
+                           HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                           VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Chrome" Property="Background"
+                      Value="{Binding Path=(c:Chrome.HoverBackground), RelativeSource={RelativeSource TemplatedParent}}"/>
+              <Setter TargetName="Chrome" Property="BorderBrush"
+                      Value="{Binding Path=(c:Chrome.HoverBorderBrush), RelativeSource={RelativeSource TemplatedParent}}"/>
+            </Trigger>
+            <Trigger Property="IsPressed" Value="True">
+              <Setter TargetName="Chrome" Property="Background"
+                      Value="{Binding Path=(c:Chrome.PressedBackground), RelativeSource={RelativeSource TemplatedParent}}"/>
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter TargetName="Chrome" Property="Opacity" Value="0.35"/>
+              <Setter Property="Cursor" Value="Arrow"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- Implicit, so a plain <Button/> physically cannot pick up the Aero look. -->
+  <Style TargetType="{x:Type Button}" BasedOn="{StaticResource ButtonBase}"/>
+  <Style TargetType="{x:Type RepeatButton}" BasedOn="{StaticResource ButtonBase}"/>
+
+  <Style TargetType="{x:Type ToggleButton}" BasedOn="{StaticResource ButtonBase}">
+    <Style.Triggers>
+      <Trigger Property="IsChecked" Value="True">
+        <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource AccentInkBrush}"/>
+        <Setter Property="c:Chrome.HoverBackground" Value="{StaticResource Accent2Brush}"/>
+        <Setter Property="c:Chrome.HoverBorderBrush" Value="{StaticResource Accent2Brush}"/>
+      </Trigger>
+    </Style.Triggers>
+  </Style>
+
+  <!-- The primary action. Lilac, never copper: copper is a status, and a button
+       painted in a status colour reads as a warning. -->
+  <Style x:Key="PrimaryButton" TargetType="{x:Type Button}" BasedOn="{StaticResource ButtonBase}">
+    <Setter Property="Background" Value="{StaticResource AccentBrush}"/>
+    <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}"/>
+    <Setter Property="Foreground" Value="{StaticResource AccentInkBrush}"/>
+    <Setter Property="c:Chrome.HoverBackground" Value="{StaticResource Accent2Brush}"/>
+    <Setter Property="c:Chrome.HoverBorderBrush" Value="{StaticResource Accent2Brush}"/>
+    <Setter Property="c:Chrome.PressedBackground" Value="{StaticResource AccentBrush}"/>
+  </Style>
+
+  <!-- Irreversible deletion only. Nothing else in the product is red. -->
+  <Style x:Key="DangerButton" TargetType="{x:Type Button}" BasedOn="{StaticResource ButtonBase}">
+    <Setter Property="Background" Value="{StaticResource DangerFillBrush}"/>
+    <Setter Property="BorderBrush" Value="{StaticResource DangerFillBrush}"/>
+    <Setter Property="Foreground" Value="{StaticResource OnDangerBrush}"/>
+    <Setter Property="c:Chrome.HoverBackground" Value="{StaticResource DangerBrush}"/>
+    <Setter Property="c:Chrome.HoverBorderBrush" Value="{StaticResource DangerBrush}"/>
+    <Setter Property="c:Chrome.PressedBackground" Value="{StaticResource DangerFillBrush}"/>
+  </Style>
+
+  <Style x:Key="SmallButton" TargetType="{x:Type Button}" BasedOn="{StaticResource ButtonBase}">
+    <Setter Property="Padding" Value="{StaticResource PadButtonSmall}"/>
+    <Setter Property="FontSize" Value="10"/>
+  </Style>
+
+  <!-- Caption buttons carry a glyph, not a word, so they get their own template
+       instead of the tracked label. -->
+  <Style x:Key="CaptionButton" TargetType="{x:Type Button}">
+    <Setter Property="OverridesDefaultStyle" Value="True"/>
+    <Setter Property="Width" Value="{StaticResource CaptionButtonWidth}"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Foreground" Value="{StaticResource Ink3Brush}"/>
+    <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRingStyle}"/>
+    <Setter Property="c:Chrome.HoverBackground" Value="{StaticResource RaisedBrush}"/>
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type Button}">
+          <Border x:Name="Chrome" Background="{TemplateBinding Background}">
+            <!-- Binding, not TemplateBinding, for the same reason as the label
+                 above: Tag is typed object, Data is Geometry, and only a Binding
+                 runs the type converter between them. -->
+            <Path x:Name="Glyph"
+                  Data="{Binding Tag, RelativeSource={RelativeSource TemplatedParent}}"
+                  Stroke="{TemplateBinding Foreground}"
+                  StrokeThickness="1"
+                  Width="10" Height="10"
+                  Stretch="None"
+                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="Chrome" Property="Background"
+                      Value="{Binding Path=(c:Chrome.HoverBackground), RelativeSource={RelativeSource TemplatedParent}}"/>
+              <Setter TargetName="Glyph" Property="Stroke" Value="{StaticResource InkBrush}"/>
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+</ResourceDictionary>

@@ -1,0 +1,473 @@
+{
+  "category": "Браузеры",
+  "rules": [
+    {
+      "id": "chrome-cache",
+      "name": "Кэш Chrome",
+      "paths": [
+        "%LOCALAPPDATA%\\Google\\Chrome\\User Data\\*\\Cache",
+        "%LOCALAPPDATA%\\Google\\Chrome Beta\\User Data\\*\\Cache",
+        "%LOCALAPPDATA%\\Google\\Chrome Dev\\User Data\\*\\Cache",
+        "%LOCALAPPDATA%\\Google\\Chrome SxS\\User Data\\*\\Cache"
+      ],
+      "tier": "Safe",
+      "consequence": "Страницы при следующем открытии подгрузятся из сети. Вкладки, пароли и история не трогаются.",
+      "olderThanDays": 0,
+      "processNames": [
+        "chrome"
+      ]
+    },
+    {
+      "id": "chrome-code-cache",
+      "name": "Кэш скомпилированных скриптов Chrome",
+      "paths": [
+        "%LOCALAPPDATA%\\Google\\Chrome\\User Data\\*\\Code Cache",
+        "%LOCALAPPDATA%\\Google\\Chrome Beta\\User Data\\*\\Code Cache",
+        "%LOCALAPPDATA%\\Google\\Chrome Dev\\User Data\\*\\Code Cache",
+        "%LOCALAPPDATA%\\Google\\Chrome SxS\\User Data\\*\\Code Cache"
+      ],
+      "tier": "Safe",
+      "consequence": "Первое открытие сайтов будет чуть медленнее, пока браузер соберёт кэш заново.",
+      "olderThanDays": 0,
+      "processNames": [
+        "chrome"
+      ]
+    },
+    {
+      "id": "chrome-gpu-cache",
+      "name": "Кэш графики Chrome",
+      "paths": [
+        "%LOCALAPPDATA%\\Google\\Chrome\\User Data\\*\\GPUCache",
+        "%LOCALAPPDATA%\\Google\\Chrome\\User Data\\*\\DawnCache",
+        "%LOCALAPPDATA%\\Google\\Chrome\\User Data\\*\\DawnGraphiteCache",
+        "%LOCALAPPDATA%\\Google\\Chrome\\User Data\\*\\DawnWebGPUCache",
+        "%LOCALAPPDATA%\\Google\\Chrome Beta\\User Data\\*\\GPUCache",
+        "%LOCALAPPDATA%\\Google\\Chrome Beta\\User Data\\*\\DawnCache",
+        "%LOCALAPPDATA%\\Google\\Chrome Beta\\User Data\\*\\DawnGraphiteCache",
+        "%LOCALAPPDATA%\\Google\\Chrome Beta\\User Data\\*\\DawnWebGPUCache",
+        "%LOCALAPPDATA%\\Google\\Chrome Dev\\User Data\\*\\GPUCache",
+        "%LOCALAPPDATA%\\Google\\Chrome Dev\\User Data\\*\\DawnCache",
+        "%LOCALAPPDATA%\\Google\\Chrome Dev\\User Data\\*\\DawnGraphiteCache",
+        "%LOCALAPPDATA%\\Google\\Chrome Dev\\User Data\\*\\DawnWebGPUCache",
+        "%LOCALAPPDATA%\\Google\\Chrome SxS\\User Data\\*\\GPUCache",
+        "%LOCALAPPDATA%\\Google\\Chrome SxS\\User Data\\*\\DawnCache",
+        "%LOCALAPPDATA%\\Google\\Chrome SxS\\User Data\\*\\DawnGraphiteCache",
+        "%LOCALAPPDATA%\\Google\\Chrome SxS\\User Data\\*\\DawnWebGPUCache",
+        "%LOCALAPPDATA%\\Google\\Chrome\\User Data\\ShaderCache",
+        "%LOCALAPPDATA%\\Google\\Chrome\\User Data\\GrShaderCache",
+        "%LOCALAPPDATA%\\Google\\Chrome\\User Data\\GraphiteDawnCache",
+        "%LOCALAPPDATA%\\Google\\Chrome Beta\\User Data\\ShaderCache",
+        "%LOCALAPPDATA%\\Google\\Chrome Beta\\User Data\\GrShaderCache",
+        "%LOCALAPPDATA%\\Google\\Chrome Beta\\User Data\\GraphiteDawnCache",
+        "%LOCALAPPDATA%\\Google\\Chrome Dev\\User Data\\ShaderCache",
+        "%LOCALAPPDATA%\\Google\\Chrome Dev\\User Data\\GrShaderCache",
+        "%LOCALAPPDATA%\\Google\\Chrome Dev\\User Data\\GraphiteDawnCache",
+        "%LOCALAPPDATA%\\Google\\Chrome SxS\\User Data\\ShaderCache",
+        "%LOCALAPPDATA%\\Google\\Chrome SxS\\User Data\\GrShaderCache",
+        "%LOCALAPPDATA%\\Google\\Chrome SxS\\User Data\\GraphiteDawnCache"
+      ],
+      "tier": "Safe",
+      "consequence": "Браузер пересоберёт шейдеры при следующем запуске.",
+      "olderThanDays": 0,
+      "processNames": [
+        "chrome"
+      ]
+    },
+    {
+      "id": "edge-cache",
+      "name": "Кэш Edge",
+      "paths": [
+        "%LOCALAPPDATA%\\Microsoft\\Edge\\User Data\\*\\Cache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge Beta\\User Data\\*\\Cache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge Dev\\User Data\\*\\Cache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge SxS\\User Data\\*\\Cache"
+      ],
+      "tier": "Safe",
+      "consequence": "Страницы при следующем открытии подгрузятся из сети. Вкладки, пароли и история не трогаются.",
+      "olderThanDays": 0,
+      "processNames": [
+        "msedge"
+      ]
+    },
+    {
+      "id": "edge-code-cache",
+      "name": "Кэш скомпилированных скриптов Edge",
+      "paths": [
+        "%LOCALAPPDATA%\\Microsoft\\Edge\\User Data\\*\\Code Cache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge Beta\\User Data\\*\\Code Cache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge Dev\\User Data\\*\\Code Cache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge SxS\\User Data\\*\\Code Cache"
+      ],
+      "tier": "Safe",
+      "consequence": "Первое открытие сайтов будет чуть медленнее, пока браузер соберёт кэш заново.",
+      "olderThanDays": 0,
+      "processNames": [
+        "msedge"
+      ]
+    },
+    {
+      "id": "edge-gpu-cache",
+      "name": "Кэш графики Edge",
+      "paths": [
+        "%LOCALAPPDATA%\\Microsoft\\Edge\\User Data\\*\\GPUCache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge\\User Data\\*\\DawnCache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge\\User Data\\*\\DawnGraphiteCache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge\\User Data\\*\\DawnWebGPUCache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge Beta\\User Data\\*\\GPUCache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge Beta\\User Data\\*\\DawnCache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge Beta\\User Data\\*\\DawnGraphiteCache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge Beta\\User Data\\*\\DawnWebGPUCache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge Dev\\User Data\\*\\GPUCache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge Dev\\User Data\\*\\DawnCache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge Dev\\User Data\\*\\DawnGraphiteCache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge Dev\\User Data\\*\\DawnWebGPUCache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge SxS\\User Data\\*\\GPUCache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge SxS\\User Data\\*\\DawnCache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge SxS\\User Data\\*\\DawnGraphiteCache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge SxS\\User Data\\*\\DawnWebGPUCache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge\\User Data\\ShaderCache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge\\User Data\\GrShaderCache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge\\User Data\\GraphiteDawnCache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge Beta\\User Data\\ShaderCache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge Beta\\User Data\\GrShaderCache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge Beta\\User Data\\GraphiteDawnCache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge Dev\\User Data\\ShaderCache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge Dev\\User Data\\GrShaderCache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge Dev\\User Data\\GraphiteDawnCache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge SxS\\User Data\\ShaderCache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge SxS\\User Data\\GrShaderCache",
+        "%LOCALAPPDATA%\\Microsoft\\Edge SxS\\User Data\\GraphiteDawnCache"
+      ],
+      "tier": "Safe",
+      "consequence": "Браузер пересоберёт шейдеры при следующем запуске.",
+      "olderThanDays": 0,
+      "processNames": [
+        "msedge"
+      ]
+    },
+    {
+      "id": "chromium-crashpad",
+      "name": "Отчёты о падениях Chrome и Edge",
+      "paths": [
+        "%LOCALAPPDATA%\\Google\\Chrome\\User Data\\Crashpad\\reports",
+        "%LOCALAPPDATA%\\Google\\Chrome Beta\\User Data\\Crashpad\\reports",
+        "%LOCALAPPDATA%\\Google\\Chrome Dev\\User Data\\Crashpad\\reports",
+        "%LOCALAPPDATA%\\Google\\Chrome SxS\\User Data\\Crashpad\\reports",
+        "%LOCALAPPDATA%\\Microsoft\\Edge\\User Data\\Crashpad\\reports",
+        "%LOCALAPPDATA%\\Microsoft\\Edge Beta\\User Data\\Crashpad\\reports",
+        "%LOCALAPPDATA%\\Microsoft\\Edge Dev\\User Data\\Crashpad\\reports",
+        "%LOCALAPPDATA%\\Microsoft\\Edge SxS\\User Data\\Crashpad\\reports"
+      ],
+      "tier": "Safe",
+      "consequence": "Отчёты о прошлых падениях браузера. Никуда не отправляются и ничего не восстанавливают.",
+      "olderThanDays": 7,
+      "processNames": [
+        "chrome",
+        "msedge"
+      ]
+    },
+    {
+      "id": "opera-cache",
+      "name": "Кэш Opera",
+      "paths": [
+        "%LOCALAPPDATA%\\Opera Software\\Opera Stable\\Cache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Stable\\Code Cache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Stable\\GPUCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Stable\\ShaderCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Stable\\GrShaderCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Stable\\Default\\Cache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Stable\\Default\\Code Cache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Stable\\Default\\GPUCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Stable\\Default\\ShaderCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Stable\\Default\\GrShaderCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Stable\\Profile *\\Cache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Stable\\Profile *\\Code Cache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Stable\\Profile *\\GPUCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Stable\\Profile *\\ShaderCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Stable\\Profile *\\GrShaderCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera GX Stable\\Cache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera GX Stable\\Code Cache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera GX Stable\\GPUCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera GX Stable\\ShaderCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera GX Stable\\GrShaderCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera GX Stable\\Default\\Cache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera GX Stable\\Default\\Code Cache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera GX Stable\\Default\\GPUCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera GX Stable\\Default\\ShaderCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera GX Stable\\Default\\GrShaderCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera GX Stable\\Profile *\\Cache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera GX Stable\\Profile *\\Code Cache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera GX Stable\\Profile *\\GPUCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera GX Stable\\Profile *\\ShaderCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera GX Stable\\Profile *\\GrShaderCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Next\\Cache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Next\\Code Cache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Next\\GPUCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Next\\ShaderCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Next\\GrShaderCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Next\\Default\\Cache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Next\\Default\\Code Cache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Next\\Default\\GPUCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Next\\Default\\ShaderCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Next\\Default\\GrShaderCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Next\\Profile *\\Cache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Next\\Profile *\\Code Cache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Next\\Profile *\\GPUCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Next\\Profile *\\ShaderCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Next\\Profile *\\GrShaderCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Developer\\Cache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Developer\\Code Cache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Developer\\GPUCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Developer\\ShaderCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Developer\\GrShaderCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Developer\\Default\\Cache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Developer\\Default\\Code Cache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Developer\\Default\\GPUCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Developer\\Default\\ShaderCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Developer\\Default\\GrShaderCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Developer\\Profile *\\Cache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Developer\\Profile *\\Code Cache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Developer\\Profile *\\GPUCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Developer\\Profile *\\ShaderCache",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Developer\\Profile *\\GrShaderCache",
+        "%APPDATA%\\Opera Software\\Opera Stable\\Cache",
+        "%APPDATA%\\Opera Software\\Opera Stable\\Code Cache",
+        "%APPDATA%\\Opera Software\\Opera Stable\\GPUCache",
+        "%APPDATA%\\Opera Software\\Opera Stable\\ShaderCache",
+        "%APPDATA%\\Opera Software\\Opera Stable\\GrShaderCache",
+        "%APPDATA%\\Opera Software\\Opera Stable\\Default\\Cache",
+        "%APPDATA%\\Opera Software\\Opera Stable\\Default\\Code Cache",
+        "%APPDATA%\\Opera Software\\Opera Stable\\Default\\GPUCache",
+        "%APPDATA%\\Opera Software\\Opera Stable\\Default\\ShaderCache",
+        "%APPDATA%\\Opera Software\\Opera Stable\\Default\\GrShaderCache",
+        "%APPDATA%\\Opera Software\\Opera Stable\\Profile *\\Cache",
+        "%APPDATA%\\Opera Software\\Opera Stable\\Profile *\\Code Cache",
+        "%APPDATA%\\Opera Software\\Opera Stable\\Profile *\\GPUCache",
+        "%APPDATA%\\Opera Software\\Opera Stable\\Profile *\\ShaderCache",
+        "%APPDATA%\\Opera Software\\Opera Stable\\Profile *\\GrShaderCache",
+        "%APPDATA%\\Opera Software\\Opera GX Stable\\Cache",
+        "%APPDATA%\\Opera Software\\Opera GX Stable\\Code Cache",
+        "%APPDATA%\\Opera Software\\Opera GX Stable\\GPUCache",
+        "%APPDATA%\\Opera Software\\Opera GX Stable\\ShaderCache",
+        "%APPDATA%\\Opera Software\\Opera GX Stable\\GrShaderCache",
+        "%APPDATA%\\Opera Software\\Opera GX Stable\\Default\\Cache",
+        "%APPDATA%\\Opera Software\\Opera GX Stable\\Default\\Code Cache",
+        "%APPDATA%\\Opera Software\\Opera GX Stable\\Default\\GPUCache",
+        "%APPDATA%\\Opera Software\\Opera GX Stable\\Default\\ShaderCache",
+        "%APPDATA%\\Opera Software\\Opera GX Stable\\Default\\GrShaderCache",
+        "%APPDATA%\\Opera Software\\Opera GX Stable\\Profile *\\Cache",
+        "%APPDATA%\\Opera Software\\Opera GX Stable\\Profile *\\Code Cache",
+        "%APPDATA%\\Opera Software\\Opera GX Stable\\Profile *\\GPUCache",
+        "%APPDATA%\\Opera Software\\Opera GX Stable\\Profile *\\ShaderCache",
+        "%APPDATA%\\Opera Software\\Opera GX Stable\\Profile *\\GrShaderCache",
+        "%APPDATA%\\Opera Software\\Opera Next\\Cache",
+        "%APPDATA%\\Opera Software\\Opera Next\\Code Cache",
+        "%APPDATA%\\Opera Software\\Opera Next\\GPUCache",
+        "%APPDATA%\\Opera Software\\Opera Next\\ShaderCache",
+        "%APPDATA%\\Opera Software\\Opera Next\\GrShaderCache",
+        "%APPDATA%\\Opera Software\\Opera Next\\Default\\Cache",
+        "%APPDATA%\\Opera Software\\Opera Next\\Default\\Code Cache",
+        "%APPDATA%\\Opera Software\\Opera Next\\Default\\GPUCache",
+        "%APPDATA%\\Opera Software\\Opera Next\\Default\\ShaderCache",
+        "%APPDATA%\\Opera Software\\Opera Next\\Default\\GrShaderCache",
+        "%APPDATA%\\Opera Software\\Opera Next\\Profile *\\Cache",
+        "%APPDATA%\\Opera Software\\Opera Next\\Profile *\\Code Cache",
+        "%APPDATA%\\Opera Software\\Opera Next\\Profile *\\GPUCache",
+        "%APPDATA%\\Opera Software\\Opera Next\\Profile *\\ShaderCache",
+        "%APPDATA%\\Opera Software\\Opera Next\\Profile *\\GrShaderCache",
+        "%APPDATA%\\Opera Software\\Opera Developer\\Cache",
+        "%APPDATA%\\Opera Software\\Opera Developer\\Code Cache",
+        "%APPDATA%\\Opera Software\\Opera Developer\\GPUCache",
+        "%APPDATA%\\Opera Software\\Opera Developer\\ShaderCache",
+        "%APPDATA%\\Opera Software\\Opera Developer\\GrShaderCache",
+        "%APPDATA%\\Opera Software\\Opera Developer\\Default\\Cache",
+        "%APPDATA%\\Opera Software\\Opera Developer\\Default\\Code Cache",
+        "%APPDATA%\\Opera Software\\Opera Developer\\Default\\GPUCache",
+        "%APPDATA%\\Opera Software\\Opera Developer\\Default\\ShaderCache",
+        "%APPDATA%\\Opera Software\\Opera Developer\\Default\\GrShaderCache",
+        "%APPDATA%\\Opera Software\\Opera Developer\\Profile *\\Cache",
+        "%APPDATA%\\Opera Software\\Opera Developer\\Profile *\\Code Cache",
+        "%APPDATA%\\Opera Software\\Opera Developer\\Profile *\\GPUCache",
+        "%APPDATA%\\Opera Software\\Opera Developer\\Profile *\\ShaderCache",
+        "%APPDATA%\\Opera Software\\Opera Developer\\Profile *\\GrShaderCache"
+      ],
+      "tier": "Safe",
+      "consequence": "Страницы при следующем открытии подгрузятся из сети. Пароли и история не трогаются.",
+      "olderThanDays": 0,
+      "processNames": [
+        "opera"
+      ]
+    },
+    {
+      "id": "yandex-cache",
+      "name": "Кэш Яндекс Браузера",
+      "paths": [
+        "%LOCALAPPDATA%\\Yandex\\YandexBrowser\\User Data\\*\\Cache",
+        "%LOCALAPPDATA%\\Yandex\\YandexBrowser\\User Data\\*\\Code Cache",
+        "%LOCALAPPDATA%\\Yandex\\YandexBrowser\\User Data\\*\\GPUCache",
+        "%LOCALAPPDATA%\\Yandex\\YandexBrowser\\User Data\\*\\DawnCache",
+        "%LOCALAPPDATA%\\Yandex\\YandexBrowser\\User Data\\*\\DawnGraphiteCache",
+        "%LOCALAPPDATA%\\Yandex\\YandexBrowser\\User Data\\*\\DawnWebGPUCache",
+        "%LOCALAPPDATA%\\Yandex\\YandexBrowser\\User Data\\ShaderCache",
+        "%LOCALAPPDATA%\\Yandex\\YandexBrowser\\User Data\\GrShaderCache",
+        "%LOCALAPPDATA%\\Yandex\\YandexBrowser\\User Data\\GraphiteDawnCache"
+      ],
+      "tier": "Safe",
+      "consequence": "Страницы при следующем открытии подгрузятся из сети. Пароли и история не трогаются.",
+      "olderThanDays": 0,
+      "processNames": [
+        "browser"
+      ]
+    },
+    {
+      "id": "brave-cache",
+      "name": "Кэш Brave",
+      "paths": [
+        "%LOCALAPPDATA%\\BraveSoftware\\Brave-Browser\\User Data\\*\\Cache",
+        "%LOCALAPPDATA%\\BraveSoftware\\Brave-Browser\\User Data\\*\\Code Cache",
+        "%LOCALAPPDATA%\\BraveSoftware\\Brave-Browser\\User Data\\*\\GPUCache",
+        "%LOCALAPPDATA%\\BraveSoftware\\Brave-Browser\\User Data\\*\\DawnCache",
+        "%LOCALAPPDATA%\\BraveSoftware\\Brave-Browser\\User Data\\*\\DawnGraphiteCache",
+        "%LOCALAPPDATA%\\BraveSoftware\\Brave-Browser\\User Data\\*\\DawnWebGPUCache",
+        "%LOCALAPPDATA%\\BraveSoftware\\Brave-Browser-Beta\\User Data\\*\\Cache",
+        "%LOCALAPPDATA%\\BraveSoftware\\Brave-Browser-Beta\\User Data\\*\\Code Cache",
+        "%LOCALAPPDATA%\\BraveSoftware\\Brave-Browser-Beta\\User Data\\*\\GPUCache",
+        "%LOCALAPPDATA%\\BraveSoftware\\Brave-Browser-Beta\\User Data\\*\\DawnCache",
+        "%LOCALAPPDATA%\\BraveSoftware\\Brave-Browser-Beta\\User Data\\*\\DawnGraphiteCache",
+        "%LOCALAPPDATA%\\BraveSoftware\\Brave-Browser-Beta\\User Data\\*\\DawnWebGPUCache",
+        "%LOCALAPPDATA%\\BraveSoftware\\Brave-Browser-Nightly\\User Data\\*\\Cache",
+        "%LOCALAPPDATA%\\BraveSoftware\\Brave-Browser-Nightly\\User Data\\*\\Code Cache",
+        "%LOCALAPPDATA%\\BraveSoftware\\Brave-Browser-Nightly\\User Data\\*\\GPUCache",
+        "%LOCALAPPDATA%\\BraveSoftware\\Brave-Browser-Nightly\\User Data\\*\\DawnCache",
+        "%LOCALAPPDATA%\\BraveSoftware\\Brave-Browser-Nightly\\User Data\\*\\DawnGraphiteCache",
+        "%LOCALAPPDATA%\\BraveSoftware\\Brave-Browser-Nightly\\User Data\\*\\DawnWebGPUCache",
+        "%LOCALAPPDATA%\\BraveSoftware\\Brave-Browser\\User Data\\ShaderCache",
+        "%LOCALAPPDATA%\\BraveSoftware\\Brave-Browser\\User Data\\GrShaderCache",
+        "%LOCALAPPDATA%\\BraveSoftware\\Brave-Browser\\User Data\\GraphiteDawnCache",
+        "%LOCALAPPDATA%\\BraveSoftware\\Brave-Browser-Beta\\User Data\\ShaderCache",
+        "%LOCALAPPDATA%\\BraveSoftware\\Brave-Browser-Beta\\User Data\\GrShaderCache",
+        "%LOCALAPPDATA%\\BraveSoftware\\Brave-Browser-Beta\\User Data\\GraphiteDawnCache",
+        "%LOCALAPPDATA%\\BraveSoftware\\Brave-Browser-Nightly\\User Data\\ShaderCache",
+        "%LOCALAPPDATA%\\BraveSoftware\\Brave-Browser-Nightly\\User Data\\GrShaderCache",
+        "%LOCALAPPDATA%\\BraveSoftware\\Brave-Browser-Nightly\\User Data\\GraphiteDawnCache"
+      ],
+      "tier": "Safe",
+      "consequence": "Закройте приложение. Загрузочный кэш будет создан заново; первое открытие может занять больше времени.",
+      "olderThanDays": 0,
+      "processNames": [
+        "brave"
+      ]
+    },
+    {
+      "id": "vivaldi-cache",
+      "name": "Кэш Vivaldi",
+      "paths": [
+        "%LOCALAPPDATA%\\Vivaldi\\User Data\\*\\Cache",
+        "%LOCALAPPDATA%\\Vivaldi\\User Data\\*\\Code Cache",
+        "%LOCALAPPDATA%\\Vivaldi\\User Data\\*\\GPUCache",
+        "%LOCALAPPDATA%\\Vivaldi\\User Data\\*\\DawnCache",
+        "%LOCALAPPDATA%\\Vivaldi\\User Data\\*\\DawnGraphiteCache",
+        "%LOCALAPPDATA%\\Vivaldi\\User Data\\*\\DawnWebGPUCache",
+        "%LOCALAPPDATA%\\Vivaldi\\User Data\\ShaderCache",
+        "%LOCALAPPDATA%\\Vivaldi\\User Data\\GrShaderCache",
+        "%LOCALAPPDATA%\\Vivaldi\\User Data\\GraphiteDawnCache"
+      ],
+      "tier": "Safe",
+      "consequence": "Закройте приложение. Загрузочный кэш будет создан заново; первое открытие может занять больше времени.",
+      "olderThanDays": 0,
+      "processNames": [
+        "vivaldi"
+      ]
+    },
+    {
+      "id": "brave-crashpad",
+      "name": "Отчёты о падениях Brave",
+      "paths": [
+        "%LOCALAPPDATA%\\BraveSoftware\\Brave-Browser\\User Data\\Crashpad\\reports",
+        "%LOCALAPPDATA%\\BraveSoftware\\Brave-Browser-Beta\\User Data\\Crashpad\\reports",
+        "%LOCALAPPDATA%\\BraveSoftware\\Brave-Browser-Nightly\\User Data\\Crashpad\\reports"
+      ],
+      "tier": "Safe",
+      "consequence": "Старые отчёты о сбоях будут удалены. Диагностика этих сбоев станет недоступна.",
+      "olderThanDays": 7,
+      "processNames": [
+        "brave"
+      ]
+    },
+    {
+      "id": "vivaldi-crashpad",
+      "name": "Отчёты о падениях Vivaldi",
+      "paths": [
+        "%LOCALAPPDATA%\\Vivaldi\\User Data\\Crashpad\\reports"
+      ],
+      "tier": "Safe",
+      "consequence": "Старые отчёты о сбоях будут удалены. Диагностика этих сбоев станет недоступна.",
+      "olderThanDays": 7,
+      "processNames": [
+        "vivaldi"
+      ]
+    },
+    {
+      "id": "yandex-crashpad",
+      "name": "Отчёты о падениях Яндекс Браузера",
+      "paths": [
+        "%LOCALAPPDATA%\\Yandex\\YandexBrowser\\User Data\\Crashpad\\reports"
+      ],
+      "tier": "Safe",
+      "consequence": "Старые отчёты о сбоях будут удалены. Диагностика этих сбоев станет недоступна.",
+      "olderThanDays": 7,
+      "processNames": [
+        "browser"
+      ]
+    },
+    {
+      "id": "opera-crashpad",
+      "name": "Отчёты о падениях Opera",
+      "paths": [
+        "%LOCALAPPDATA%\\Opera Software\\Opera Stable\\Crashpad\\reports",
+        "%LOCALAPPDATA%\\Opera Software\\Opera GX Stable\\Crashpad\\reports",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Next\\Crashpad\\reports",
+        "%LOCALAPPDATA%\\Opera Software\\Opera Developer\\Crashpad\\reports",
+        "%APPDATA%\\Opera Software\\Opera Stable\\Crashpad\\reports",
+        "%APPDATA%\\Opera Software\\Opera GX Stable\\Crashpad\\reports",
+        "%APPDATA%\\Opera Software\\Opera Next\\Crashpad\\reports",
+        "%APPDATA%\\Opera Software\\Opera Developer\\Crashpad\\reports"
+      ],
+      "tier": "Safe",
+      "consequence": "Старые отчёты о сбоях будут удалены. Диагностика этих сбоев станет недоступна.",
+      "olderThanDays": 7,
+      "processNames": [
+        "opera"
+      ]
+    },
+    {
+      "id": "firefox-cache",
+      "name": "Кэш Firefox",
+      "paths": [
+        "%LOCALAPPDATA%\\Mozilla\\Firefox\\Profiles\\*\\cache2",
+        "%LOCALAPPDATA%\\Mozilla\\Firefox\\Profiles\\*\\jumpListCache"
+      ],
+      "tier": "Safe",
+      "consequence": "Закройте Firefox. Страницы и значки задач загрузятся заново. Профили, пароли, закладки и данные сайтов сохраняются.",
+      "olderThanDays": 0,
+      "processNames": [
+        "firefox"
+      ]
+    },
+    {
+      "id": "firefox-crashes",
+      "name": "Отчёты о падениях Firefox",
+      "paths": [
+        "%APPDATA%\\Mozilla\\Firefox\\Crash Reports\\pending",
+        "%APPDATA%\\Mozilla\\Firefox\\Crash Reports\\submitted",
+        "%APPDATA%\\Mozilla\\Firefox\\Profiles\\*\\minidumps"
+      ],
+      "tier": "Safe",
+      "consequence": "Старые отчёты о сбоях и дампы памяти будут удалены; разбор этих сбоев станет недоступен.",
+      "olderThanDays": 7,
+      "processNames": [
+        "firefox"
+      ]
+    }
+  ]
+}

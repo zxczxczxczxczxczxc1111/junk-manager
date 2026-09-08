@@ -1,0 +1,83 @@
+{
+  "category": "Игры",
+  "rules": [
+    {
+      "id": "steam-htmlcache",
+      "name": "Кэш встроенного браузера Steam",
+      "paths": [
+        "%LOCALAPPDATA%\\Steam\\htmlcache\\Cache",
+        "%LOCALAPPDATA%\\Steam\\htmlcache\\Code Cache",
+        "%LOCALAPPDATA%\\Steam\\htmlcache\\GPUCache"
+      ],
+      "tier": "Safe",
+      "consequence": "Магазин и страницы игр подгрузятся заново. Установленные игры и сохранения не трогаются.",
+      "olderThanDays": 0,
+      "processNames": [
+        "steam",
+        "steamwebhelper"
+      ]
+    },
+    {
+      "id": "epic-webcache",
+      "name": "Кэш лаунчера Epic Games",
+      "paths": [
+        "%LOCALAPPDATA%\\EpicGamesLauncher\\Saved\\webcache\\Cache",
+        "%LOCALAPPDATA%\\EpicGamesLauncher\\Saved\\webcache\\Code Cache",
+        "%LOCALAPPDATA%\\EpicGamesLauncher\\Saved\\webcache\\GPUCache",
+        "%LOCALAPPDATA%\\EpicGamesLauncher\\Saved\\webcache_*\\Cache",
+        "%LOCALAPPDATA%\\EpicGamesLauncher\\Saved\\webcache_*\\Code Cache",
+        "%LOCALAPPDATA%\\EpicGamesLauncher\\Saved\\webcache_*\\GPUCache"
+      ],
+      "tier": "Safe",
+      "consequence": "Витрина магазина подгрузится заново. Установленные игры и сохранения не трогаются.",
+      "olderThanDays": 0,
+      "processNames": [
+        "EpicGamesLauncher",
+        "EpicWebHelper"
+      ]
+    },
+    {
+      "id": "battlenet-cache",
+      "name": "Кэш Battle.net",
+      "paths": [
+        "%APPDATA%\\Battle.net\\Cache",
+        "%LOCALAPPDATA%\\Battle.net\\Cache"
+      ],
+      "tier": "Safe",
+      "consequence": "Лаунчер подгрузит витрину заново. Установленные игры не трогаются.",
+      "olderThanDays": 0,
+      "processNames": [
+        "Battle.net",
+        "Agent"
+      ]
+    },
+    {
+      "id": "unity-shader-cache",
+      "name": "Кэш шейдеров игр на Unity",
+      "paths": [
+        "%LOCALAPPDATA%\\Unity\\caches\\ShaderCache",
+        "%LOCALAPPDATA%\\Unity\\caches\\GiCache"
+      ],
+      "tier": "Safe",
+      "consequence": "Соберётся заново при следующем запуске. Первая загрузка сцены будет дольше.",
+      "olderThanDays": 0,
+      "processNames": [
+        "Unity",
+        "UnityShaderCompiler"
+      ]
+    },
+    {
+      "id": "epic-logs",
+      "name": "Журналы Epic Games Launcher",
+      "paths": [
+        "%LOCALAPPDATA%\\EpicGamesLauncher\\Saved\\Logs"
+      ],
+      "tier": "Safe",
+      "consequence": "Старые журналы лаунчера будут удалены. Разбор прошлых ошибок станет недоступен.",
+      "olderThanDays": 7,
+      "processNames": [
+        "EpicGamesLauncher"
+      ]
+    }
+  ]
+}

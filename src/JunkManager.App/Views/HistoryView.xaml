@@ -1,0 +1,122 @@
+<UserControl x:Class="JunkManager.App.Views.HistoryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:c="clr-namespace:JunkManager.App.Controls"
+             xmlns:conv="clr-namespace:JunkManager.App.Converters"
+             xmlns:svc="clr-namespace:JunkManager.App.Services"
+             xmlns:vm="clr-namespace:JunkManager.App.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             d:DataContext="{d:DesignInstance Type=vm:HistoryViewModel}"
+             mc:Ignorable="d"
+             x:ClassModifier="internal">
+
+  <UserControl.Resources>
+    <conv:ByteSizeConverter x:Key="Razmer"/>
+    <conv:PluralConverter x:Key="Sklonenie"/>
+    <conv:BoolToVisibilityConverter x:Key="VidnoKogdaEst"/>
+  </UserControl.Resources>
+
+  <!-- Своего StateHost здесь нет: он один на продукт и живёт в оболочке.
+       Экран отдаёт своё состояние наружу через IScreenViewModel.State. -->
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
+
+    <Grid Grid.Row="0" Margin="0,0,0,18">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="Auto"/>
+      </Grid.ColumnDefinitions>
+
+      <StackPanel Grid.Column="0">
+        <c:TrackedText Text="ЖУРНАЛ"
+                       Tracking="{StaticResource TrackingEyebrow}"
+                       FontFamily="{StaticResource TextFont}"
+                       FontSize="{StaticResource FontSizeEyebrow}"
+                       Foreground="{StaticResource Ink3Brush}"/>
+        <TextBlock FontFamily="{StaticResource DisplayFont}"
+                   FontSize="{StaticResource FontSizeH1}" Margin="0,6,0,0"
+                   AutomationProperties.AutomationId="history-heading">
+          <Run Text="Очисток:" Foreground="{StaticResource Ink3Brush}"/>
+          <Run Text="{Binding Runs.Count, Mode=OneWay}"
+               Foreground="{StaticResource InkBrush}" FontWeight="Bold"/>
+        </TextBlock>
+        <TextBlock FontFamily="{StaticResource TextFont}"
+                   FontSize="{StaticResource FontSizeSub}"
+                   Foreground="{StaticResource Ink2Brush}" Margin="0,8,0,0"
+                   Text="Журнал не средство отката: удаление безвозвратно"/>
+      </StackPanel>
+
+      <Button Grid.Column="1" Content="Открыть папку" VerticalAlignment="Center"
+              Command="{Binding OtkrytCommand}"
+              AutomationProperties.AutomationId="history-open-folder"/>
+    </Grid>
+
+    <Grid Grid.Row="1">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="{StaticResource CategoryColumnWidth}"/>
+        <ColumnDefinition Width="*"/>
+      </Grid.ColumnDefinitions>
+
+      <Border Grid.Column="0" Background="{StaticResource PanelBrush}"
+              BorderBrush="{StaticResource LineBrush}" BorderThickness="1,1,0,1">
+        <ListBox ItemsSource="{Binding Runs}"
+                 SelectedItem="{Binding Current}"
+                 AutomationProperties.AutomationId="history-runs">
+          <ListBox.ItemTemplate>
+            <DataTemplate DataType="{x:Type svc:HistoryRun}">
+              <StackPanel Margin="{StaticResource PadRow}">
+                <!-- Местное время, а не UTC: человек сравнивает запись с тем,
+                     что помнит про свой вечер, а не с часовым поясом ноль. -->
+                <TextBlock FontFamily="{StaticResource MonoFont}"
+                           FontSize="{StaticResource FontSizeMono}"
+                           Foreground="{StaticResource Ink3Brush}"
+                           Text="{Binding StartedUtc.LocalDateTime,
+                                  StringFormat='{}{0:dd.MM.yyyy HH:mm}'}"
+                           AutomationProperties.AutomationId="history-run-time"/>
+                <TextBlock FontFamily="{StaticResource TextFont}"
+                           FontSize="{StaticResource FontSizeRow}"
+                           Foreground="{StaticResource InkBrush}"
+                           Margin="0,5,0,0">
+                  <Run Text="освобождено"/>
+                  <Run Text="{Binding BytesFreed, Converter={StaticResource Razmer}, Mode=OneWay}"
+                       FontWeight="SemiBold"/>
+                </TextBlock>
+                <TextBlock FontFamily="{StaticResource TextFont}"
+                           FontSize="{StaticResource FontSizeMeta}"
+                           Foreground="{StaticResource Ink3Brush}"
+                           Margin="0,4,0,0"
+                           Text="{Binding DeletedCount, Converter={StaticResource Sklonenie},
+                                  ConverterParameter='объект удалён|объекта удалено|объектов удалено', Mode=OneWay}"/>
+
+                <!-- Строка появляется только когда есть что показать. Без неё
+                     прогон, где не удалилось всё, выглядит как «0 объектов
+                     удалено» и неотличим от прогона, где удалять было нечего. -->
+                <TextBlock FontFamily="{StaticResource TextFont}"
+                           FontSize="{StaticResource FontSizeMeta}"
+                           Foreground="{StaticResource RiskBrush}"
+                           Margin="0,3,0,0"
+                           Visibility="{Binding UnfinishedCount,
+                                        Converter={StaticResource VidnoKogdaEst}}"
+                           Text="{Binding UnfinishedCount, Converter={StaticResource Sklonenie},
+                                  ConverterParameter='строка без удаления|строки без удаления|строк без удаления', Mode=OneWay}"
+                           AutomationProperties.AutomationId="history-run-unfinished"/>
+              </StackPanel>
+            </DataTemplate>
+          </ListBox.ItemTemplate>
+        </ListBox>
+      </Border>
+
+      <Border Grid.Column="1" Background="{StaticResource CardBrush}"
+              BorderBrush="{StaticResource LineBrush}" BorderThickness="1">
+        <ListBox ItemsSource="{Binding Current.Outcomes}"
+                 VirtualizingPanel.ScrollUnit="Pixel"
+                 ItemTemplate="{StaticResource OutcomeRowTemplate}"
+                 AutomationProperties.AutomationId="history-outcomes"/>
+      </Border>
+    </Grid>
+  </Grid>
+</UserControl>

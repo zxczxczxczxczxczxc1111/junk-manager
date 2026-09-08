@@ -1,0 +1,111 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:conv="clr-namespace:JunkManager.App.Converters">
+
+  <conv:NullToBoolConverter x:Key="NullIsTrue"/>
+  <conv:BoolToVisibilityConverter x:Key="LoadingCancelVisible"/>
+
+  <!-- ==== Ход проверки: по центру, а не в углу. ====
+
+       Первая версия ставила полосу и путь в верхний левый угол экрана. На 1920
+       это тонкая линия и две строки над огромным чёрным полем: проверено
+       снимком 05.09.2026, выглядит как повисшее приложение, а не как работа.
+       Проход идёт больше минуты, и всё это время экран обязан говорить, что
+       происходит, и говорить это там, куда человек смотрит.
+
+       MotionEnabled выключает повторяющееся движение вместе с системной
+       настройкой анимации. Название текущей операции продолжает обновляться.
+
+       Луч ходит по тому же значку из двух прямоугольников, что стоит в пустом
+       состоянии. Один язык на два состояния: это не другой экран, это тот же
+       экран в работе. -->
+  <DataTemplate x:Key="LoadingStateTemplate">
+    <Grid HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="520">
+      <StackPanel>
+
+        <!-- Значок со сканирующим лучом. ClipToBounds обязателен: без него луч
+             уезжает за пределы значка и чертит полосу через весь экран. -->
+        <Grid Width="48" Height="46" HorizontalAlignment="Center"
+              ClipToBounds="True" Margin="0,0,0,22">
+          <Path Data="M 6,9 H 42 V 20 H 6 Z M 6,26 H 27 V 37 H 6 Z"
+                Stroke="{StaticResource Ink4Brush}" StrokeThickness="1.8"
+                Fill="Transparent" Stretch="None"/>
+
+          <Rectangle x:Name="Luch" Height="2" Fill="{StaticResource AccentBrush}"
+                     VerticalAlignment="Top" HorizontalAlignment="Stretch">
+            <Rectangle.RenderTransform>
+              <TranslateTransform x:Name="LuchSdvig" Y="0"/>
+            </Rectangle.RenderTransform>
+          </Rectangle>
+        </Grid>
+
+        <TextBlock Text="Идёт проход по диску"
+                   FontFamily="{StaticResource DisplayFont}"
+                   FontSize="{StaticResource FontSizeSectionTitle}"
+                   Foreground="{StaticResource InkBrush}"
+                   TextAlignment="Center"
+                   AutomationProperties.AutomationId="loading-title"/>
+
+        <!-- Путь под заголовком и в одну строку. InkPath, а не Ink4: Ink4 по
+             своему описанию в Tokens.xaml это украшение и «никогда не
+             предложение», контраст 1.6 на пустоте. -->
+        <TextBlock Text="{Binding ProgressPath}"
+                   FontFamily="{StaticResource MonoFont}"
+                   FontSize="{StaticResource FontSizeMono}"
+                   Foreground="{StaticResource InkPathBrush}"
+                   TextAlignment="Center"
+                   TextTrimming="CharacterEllipsis"
+                   Margin="0,10,0,0"
+                   AutomationProperties.AutomationId="loading-path"/>
+
+        <ProgressBar Value="{Binding ProgressShare, Mode=OneWay}"
+                     IsIndeterminate="{Binding ProgressShare,
+                                       Converter={StaticResource NullIsTrue}}"
+                     Width="360" Margin="0,20,0,0"
+                     AutomationProperties.AutomationId="loading-progress"/>
+
+        <TextBlock Text="Ничего не удаляется: это только чтение"
+                   FontFamily="{StaticResource TextFont}"
+                   FontSize="{StaticResource FontSizeMeta}"
+                   Foreground="{StaticResource Ink3Brush}"
+                   TextAlignment="Center"
+                   Margin="0,14,0,0"
+                   AutomationProperties.AutomationId="loading-note"/>
+        <Button Content="Остановить проверку" Command="{Binding CancelCommand}"
+                HorizontalAlignment="Center" Margin="0,18,0,0"
+                Visibility="{Binding CancelCommand, Converter={StaticResource LoadingCancelVisible}}"
+                AutomationProperties.AutomationId="loading-cancel"/>
+      </StackPanel>
+    </Grid>
+
+    <DataTemplate.Triggers>
+      <!-- Hidden controls do not need a private dance rehearsal. -->
+      <MultiDataTrigger>
+        <MultiDataTrigger.Conditions>
+          <Condition Binding="{Binding IsVisible, ElementName=Luch}" Value="True"/>
+          <Condition Binding="{Binding Source={StaticResource MotionEnabled}}" Value="True"/>
+        </MultiDataTrigger.Conditions>
+        <MultiDataTrigger.EnterActions>
+        <BeginStoryboard Name="Hodit">
+          <Storyboard RepeatBehavior="Forever">
+            <DoubleAnimation Storyboard.TargetName="LuchSdvig"
+                             Storyboard.TargetProperty="Y"
+                             From="0" To="44" Duration="0:0:1.1"
+                             AutoReverse="True"/>
+            <!-- Луч гаснет на разворотах: иначе он «прилипает» к краю на кадр
+                 и движение читается рывками. -->
+            <DoubleAnimation Storyboard.TargetName="Luch"
+                             Storyboard.TargetProperty="Opacity"
+                             From="0.15" To="1" Duration="0:0:0.55"
+                             AutoReverse="True"/>
+          </Storyboard>
+        </BeginStoryboard>
+        </MultiDataTrigger.EnterActions>
+        <MultiDataTrigger.ExitActions>
+          <StopStoryboard BeginStoryboardName="Hodit"/>
+        </MultiDataTrigger.ExitActions>
+      </MultiDataTrigger>
+    </DataTemplate.Triggers>
+  </DataTemplate>
+
+</ResourceDictionary>

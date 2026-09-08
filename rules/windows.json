@@ -1,0 +1,103 @@
+{
+  "category": "Windows",
+  "rules": [
+    {
+      "id": "prefetch",
+      "name": "Данные предзагрузки программ",
+      "paths": [
+        "%WINDIR%\\Prefetch\\*.pf"
+      ],
+      "tier": "Risk",
+      "consequence": "Windows соберёт данные о запуске заново. Первые запуски программ будут чуть медленнее, дальше как обычно.",
+      "olderThanDays": 30
+    },
+    {
+      "id": "temp-user",
+      "name": "Временные файлы пользователя",
+      "paths": [
+        "%TEMP%"
+      ],
+      "tier": "Safe",
+      "consequence": "Файлы, которые программы оставили в общей временной папке и неделю к ним не возвращались. Свежие и занятые не трогаются: правило забирает файлы поимённо, а не папку целиком.",
+      "olderThanDays": 7
+    },
+    {
+      "id": "windows-temp",
+      "name": "Временные файлы Windows",
+      "paths": [
+        "%WINDIR%\\Temp\\*"
+      ],
+      "tier": "Safe",
+      "consequence": "Рабочие файлы служб и установщиков, к которым месяц никто не обращался. Занятые файлы пропускаются с именем держащего процесса.",
+      "olderThanDays": 30
+    },
+    {
+      "id": "windows-logs",
+      "name": "Журналы обслуживания Windows",
+      "paths": [
+        "%WINDIR%\\Logs\\CBS",
+        "%WINDIR%\\Logs\\DISM",
+        "%WINDIR%\\Logs\\WindowsUpdate",
+        "%WINDIR%\\Logs\\MoSetup",
+        "%WINDIR%\\Logs\\SIH"
+      ],
+      "tier": "Safe",
+      "consequence": "Записи о прошлых обновлениях и проверках целостности. Нужны только при разборе уже случившейся поломки.",
+      "olderThanDays": 30
+    },
+    {
+      "id": "panther",
+      "name": "Журналы установки Windows",
+      "paths": [
+        "%WINDIR%\\Panther\\*"
+      ],
+      "tier": "Safe",
+      "consequence": "Отчёты установщика системы. Система уже установлена, повторно они не читаются.",
+      "olderThanDays": 30
+    },
+    {
+      "id": "system32-logfiles",
+      "name": "Служебные журналы System32",
+      "paths": [
+        "%WINDIR%\\System32\\LogFiles\\SQM",
+        "%WINDIR%\\System32\\LogFiles\\WMI"
+      ],
+      "tier": "Safe",
+      "consequence": "Телеметрия и трассировки WMI. Пересоздаются сами при следующей записи.",
+      "olderThanDays": 30
+    },
+    {
+      "id": "crash-dumps-user",
+      "name": "Дампы упавших программ",
+      "paths": [
+        "%LOCALAPPDATA%\\CrashDumps"
+      ],
+      "tier": "Safe",
+      "consequence": "Слепки памяти программ, которые когда-то упали. Нужны разработчику той программы, а не вам.",
+      "olderThanDays": 14
+    },
+    {
+      "id": "windows-error-reporting",
+      "name": "Отчёты об ошибках Windows",
+      "paths": [
+        "%LOCALAPPDATA%\\Microsoft\\Windows\\WER\\ReportArchive",
+        "%LOCALAPPDATA%\\Microsoft\\Windows\\WER\\ReportQueue",
+        "%LOCALAPPDATA%\\Microsoft\\Windows\\WER\\Temp"
+      ],
+      "tier": "Safe",
+      "consequence": "Отчёты о прошлых сбоях. Никуда не отправляются и ничего не восстанавливают.",
+      "olderThanDays": 14
+    },
+    {
+      "id": "internet-explorer-cache",
+      "name": "Кэш встроенного движка Internet Explorer",
+      "paths": [
+        "%LOCALAPPDATA%\\Microsoft\\Windows\\INetCache\\IE",
+        "%LOCALAPPDATA%\\Microsoft\\Windows\\INetCache\\Low\\IE"
+      ],
+      "tier": "Safe",
+      "consequence": "Этим кэшем пользуются встроенные окна с веб-содержимым. Страницы подгрузятся заново.",
+      "olderThanDays": 7
+    }
+  ]
+}

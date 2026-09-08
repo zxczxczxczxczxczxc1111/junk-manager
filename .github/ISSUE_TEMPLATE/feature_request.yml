@@ -1,0 +1,15 @@
+name: Предложение
+description: Предложить изменение в приложении.
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Чего сейчас не хватает
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Как ты предлагаешь это сделать
+    validations:
+      required: true
